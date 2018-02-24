@@ -1,0 +1,135 @@
+
+html, body {
+  width: auto !important;
+  background-color: #F3F3F3;
+}
+
+body {
+  padding: 20px;
+  max-width: 750px;
+}
+
+.line-break {
+  background-color: lightgrey;
+  height: 3px;
+  width: 100%;
+  margin-left: 0px;
+  margin-top: 10px;
+  margin-bottom: 30px;
+}
+
+h1 {
+  margin: 0px;
+  padding: 0px;
+  font-size: 32px;
+  font-weight: 600;
+  font-family: -apple-system;
+}
+
+h1 p {
+    color: purple;
+    display: inline;
+}
+
+h2 {
+  padding: 0px;
+  margin: 0px;
+  padding-top: 5px;
+  font-size: 22px;
+  font-weight: 600;
+  font-family: -apple-system;
+}
+
+h3 {
+  margin: 0px;
+  padding: 0px;
+  margin-top: 40;
+
+  padding-bottom: 10px;
+  font-size: 18px;
+  font-weight: 500;
+  font-family: -apple-system;
+
+  margin-top: 30px;
+  margin-bottom: 10px;
+}
+
+#upload-text {
+  margin: 0px;
+  padding: 0px;
+  margin-top: 40;
+
+  padding-bottom: 10px;
+  font-size: 18px;
+  font-weight: 500;
+  font-family: -apple-system;
+
+  margin-top: 30px;
+  margin-bottom: 10px;
+  line-height: 30px;
+}
+
+#response-input {
+  margin-top: 60px;
+  width: 50px;
+  text-align: center;
+  background-color: #F3F3F3;
+  border: none;
+  font-size: 18px;
+  font-weight: 500;
+  color: black;
+  font-family: -apple-system;
+  outline: none;
+}
+
+h5 {
+  margin: 0px;
+  padding-bottom: 0px;
+  font-size: 18px;
+  font-weight: 500;
+  color: black;
+  font-family: -apple-system;
+  display: inline;
+}
+
+
+
+h4 {
+  margin: 0px;
+  padding-top: 40px;
+
+  padding-bottom: 0px;
+  font-size: 14px;
+  font-weight: 500;
+  color: darkgrey;
+  font-family: -apple-system;
+}
+
+.radio-group {
+  text-align: left;
+  margin: 0 10px 6px 10px;
+  font-size: 18px;
+  font-weight: 400;
+  font-family: -apple-system;
+  line-height: 15px;
+}
+
+input[type='radio'], label {
+    vertical-align: bottom;
+    margin: 0;
+    padding: 20px;
+    padding-left: 2px;
+}
+
+input {
+  padding-left: 40px;
+}
+
+footer {
+  margin: 0px;
+  padding-top: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: black;
+  font-family: -apple-system;
+}

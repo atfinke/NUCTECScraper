@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8" />
+  <title>NUCTECScraper</title>
+  <link rel="stylesheet" href="stylesheets/index.css">
+  <script type="text/javascript" src="javascripts/index.js"></script>
+</head>
+
+<body onload="updatedForm();">
+
+  <h1 style='cursor: pointer;' onclick='window.location="index.html"'><p>NU</p> Course Rankings</h1>
+
+  <h2>So you want a course that...</h2>
+  <h3>Gets high overall ratings?</h3>
+
+  <form id="q1-response" onchange="updatedForm();">
+    <div class="radio-group">
+      <input type="radio" name="q1" id="q1-yes" value="1" checked="checked">
+        <label for="q1-yes">Yes</label>
+      </input>
+      <input type="radio" name="q1" id="q1-no" value="2">
+        <label for="q1-no">No</label>
+      </input>
+      <input type="radio" name="q1" id="q1-not-important" value="3">
+        <label for="q1-not-important">Not Important</label>
+      </input>
+    </div>
+  </form>
+  <h3>Will teach you a lot?</h3>
+  <form id="q2-response" onchange="updatedForm();">
+    <div class="radio-group">
+      <input type="radio" name="q2" id="q2-yes" value="1" checked="checked">
+        <label for="q2-yes">Yes</label>
+      </input>
+      <input type="radio" name="q2" id="q2-no" value="2">
+        <label for="q2-no">No</label>
+      </input>
+      <input type="radio" name="q2" id="q2-not-important" value="3">
+        <label for="q2-not-important">Not Important</label>
+      </input>
+    </div>
+  </form>
+  <h3>Will challenge you intellectually?</h3>
+  <form id="q1-response" onchange="updatedForm();">
+    <div class="radio-group">
+      <input type="radio" name="q3" id="q3-yes" value="1" checked="checked">
+        <label for="q3-yes">Yes</label>
+      </input>
+      <input type="radio" name="q3" id="q3-no" value="2">
+        <label for="q3-no">No</label>
+      </input>
+      <input type="radio" name="q3" id="q3-not-important" value="3">
+        <label for="q3-not-important">Not Important</label>
+      </input>
+    </div>
+  </form>
+  <h3>Will stimulate your interest in the subject?</h3>
+  <form id="q4-response"   onchange="updatedForm();" onchange="updatedForm();">
+    <div class="radio-group">
+      <input type="radio" name="q4" id="q4-yes" value="1" checked="checked">
+        <label for="q4-yes">Yes</label>
+      </input>
+      <input type="radio" name="q4" id="q4-no" value="2">
+        <label for="q4-no">No</label>
+      </input>
+      <input type="radio" name="q4" id="q4-not-important" value="3">
+        <label for="q4-not-important">Not Important</label>
+      </input>
+    </div>
+  </form>
+  <h3>Has a great professor?</h3>
+  <form id="q5-response" onchange="updatedForm();">
+    <div class="radio-group">
+      <input type="radio" name="q5" id="q5-yes" value="1" checked="checked">
+        <label for="q5-yes">Yes</label>
+      </input>
+      <input type="radio" name="q5" id="q5-no" value="2">
+        <label for="q5-no">No</label>
+      </input>
+      <input type="radio" name="q5" id="q5-not-important" value="3">
+        <label for="q5-not-important">Not Important</label>
+      </input>
+    </div>
+  </form>
+
+  <h5>Min responses required:</h5>
+  <input id="response-input" type="number" name="responsesNeeded" min="0" value="10">
+
+  <h4 id="forumla">Rating =  [Overlall Rating] + (6-Interllect)</h4>
+
+  <div class="line-break"></div>
+
+
+<label id="upload-text" for="myFile">
+  Upload output from <a href="https://github.com/atfinke/NUCTECScraper"  style="text-decoration:none">NUCTECScraper</a>
+</label>
+<input name="myFile" id="fileUpload" type="file" multiple="multiple" onchange="upload();"></input>
+<button onclick="upload();">Rate Classes</button>
+
+</body>
+
+<footer>
+University policy prohibits the distribution of CTECs, so you must gather them yourself (using this tool).
+</footer>
+</html>
