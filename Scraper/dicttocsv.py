@@ -1,6 +1,10 @@
 import os
 
 def saveDictionariesToCSV(dictionaries, fileName):
+
+    if (len(dictionaries) == 0):
+        return
+
     csvFirstLine = "";
     csvContent = "";
     keys = sorted(dictionaries[0].keys())

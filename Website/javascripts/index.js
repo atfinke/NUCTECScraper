@@ -5,6 +5,7 @@ function updatedForm() {
     "negative": 2,
     "none": 3
   })
+
   var overallRatingFactor = document.querySelector('input[name="q1"]:checked').value;
   var learningFactor = document.querySelector('input[name="q2"]:checked').value;
   var challengingFactor = document.querySelector('input[name="q3"]:checked').value;
@@ -47,7 +48,7 @@ function updatedForm() {
 }
 
 
-function upload() {
+function rate() {
 
   // Yes there would be a more efficent way so we only
   // pass through the list once, but I don't care right now.
@@ -81,6 +82,7 @@ function upload() {
 
         loads += 1;
         if (loads == filesUploaded.length) {
+          console.log("loaded");
             theMostInefficentSortingFunction(classes);
         }
       }
@@ -96,6 +98,7 @@ function upload() {
 function theMostInefficentSortingFunction(classes) {
 
   var ranked = [];
+  var existingRanks = {};
 
   var classesLength = classes.length;
   for (var classIndex = 0; classIndex < classesLength; classIndex++) {
@@ -106,12 +109,16 @@ function theMostInefficentSortingFunction(classes) {
     if (r == 0 || isNaN(r)) {
       continue;
     }
-    var rankedLength = classes.length;
+    var rankedLength = ranked.length;
     for (var rankIndex = 0; rankIndex < rankedLength; rankIndex++) {
 
-      if (r > inefficentSingleClassRank(ranked[rankIndex])) {
-        ranked.splice(rankIndex, 0, classes[classIndex]);
+      newItem = classes[classIndex];
+      existingItem = ranked[rankIndex];
+      existingRank = existingRanks[existingItem["shortName"] + existingItem["instructor"] + existingItem["ratingCourse"]]
+      if (r > existingRank) {
+        ranked.splice(rankIndex, 0, newItem);
         inserted = true;
+        existingRanks[newItem["shortName"] + newItem["instructor"] + newItem["ratingCourse"]] = r;
         break;
       }
 
@@ -122,12 +129,16 @@ function theMostInefficentSortingFunction(classes) {
     }
 
   }
-
-  window.localStorage.setItem("ranked", JSON.stringify(ranked));
-  var meta1 = JSON.parse(window.localStorage.getItem("ranked"));
+  
+  if (location.hostname === "localhost" || location.hostname === "127.0.0.1" || location.hostname === "") {
+    window.localStorage.setItem("ranked-local", JSON.stringify(ranked));
+  } else {
+    window.localStorage.setItem("ranked", JSON.stringify(ranked));
+  }
 
   var win = window.open("./results.html", '_blank');
   win.focus();
+
 }
 
 function inefficentSingleClassRank(indiClass) {

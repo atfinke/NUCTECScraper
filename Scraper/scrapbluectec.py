@@ -9,8 +9,13 @@ def scrapLoadedCTECPage(driver):
         "url": driver.current_url
     }
 
-    while len(driver.find_elements_by_tag_name("table")) < 2:
+    sleeps = 0;
+    while len(driver.find_elements_by_tag_name("table")) < 2 and sleeps < 100:
         sleep(0.15);
+        sleeps += 1;
+
+    if sleeps == 100:
+        return {};
 
     for element in driver.find_elements_by_tag_name("span"):
         text = element.text;

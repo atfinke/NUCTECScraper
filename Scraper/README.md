@@ -4,6 +4,4 @@ Currently requires the DUO app for 2FA w/ Caesar, a Mac with Safari > 11.0, and 
 
 Example usage:
 
-python main.py -m Subject -s "MATH,EECS"  -n [YOUR_NET_ID] -p [YOUR_PASSWORD]
-
-
+python main.py -s "MATH,EECS"  -n [YOUR_NET_ID] -p [YOUR_PASSWORD]
