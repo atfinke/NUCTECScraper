@@ -1,13 +1,7 @@
 var keyDown = false;
 
 function loadData() {
-  var data;
-
-  if (location.hostname === "localhost" || location.hostname === "127.0.0.1" || location.hostname === "") {
-    data = JSON.parse(window.localStorage.getItem("ranked-local"));
-  } else {
-    data = JSON.parse(window.localStorage.getItem("ranked"));
-  }
+  var data = JSON.parse(localStorage.getItem("ranked"));
 
   var results = 15;
   var firstFive = data.slice(0, results);

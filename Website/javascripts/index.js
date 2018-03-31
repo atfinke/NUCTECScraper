@@ -91,54 +91,40 @@ function rate() {
       alert("This browser does not support HTML5.");
     }
   }
-
-
 }
+
 // I don't care enfough to make it better
 function theMostInefficentSortingFunction(classes) {
+  var ranks = {};
+  var sortedClasses = [];
 
-  var ranked = [];
-  var existingRanks = {};
-
-  var classesLength = classes.length;
-  for (var classIndex = 0; classIndex < classesLength; classIndex++) {
-    var inserted = false;
-
-    var r = inefficentSingleClassRank(classes[classIndex]);
-
-    if (r == 0 || isNaN(r)) {
+  for (var classIndex = 0; classIndex < classes.length; classIndex++) {
+    var newClass = classes[classIndex];
+    var rank = inefficentSingleClassRank(newClass);
+    if (rank == 0 || isNaN(rank)) {
       continue;
     }
-    var rankedLength = ranked.length;
-    for (var rankIndex = 0; rankIndex < rankedLength; rankIndex++) {
+    ranks[newClass["shortName"] + newClass["instructor"] + newClass["ratingCourse"]] = rank;
 
-      newItem = classes[classIndex];
-      existingItem = ranked[rankIndex];
-      existingRank = existingRanks[existingItem["shortName"] + existingItem["instructor"] + existingItem["ratingCourse"]]
-      if (r > existingRank) {
-        ranked.splice(rankIndex, 0, newItem);
-        inserted = true;
-        existingRanks[newItem["shortName"] + newItem["instructor"] + newItem["ratingCourse"]] = r;
-        break;
+    var insertedClass = false;
+    for (var sortedClassIndex = 0; sortedClassIndex < sortedClasses.length; sortedClassIndex++) {
+      var sortedClass = sortedClasses[sortedClassIndex]
+      var sortedClassRank = ranks[sortedClass["shortName"] + sortedClass["instructor"] + sortedClass["ratingCourse"]];
+      if (rank > sortedClassRank) {
+          sortedClasses.splice(sortedClassIndex, 0, newClass);
+          insertedClass = true;
+          break;
       }
-
     }
 
-    if (inserted == false) {
-      ranked.push(classes[classIndex])
+    if (!insertedClass) {
+      sortedClasses.push(newClass);
     }
-
-  }
-  
-  if (location.hostname === "localhost" || location.hostname === "127.0.0.1" || location.hostname === "") {
-    window.localStorage.setItem("ranked-local", JSON.stringify(ranked));
-  } else {
-    window.localStorage.setItem("ranked", JSON.stringify(ranked));
   }
 
+  localStorage.setItem("ranked", JSON.stringify(sortedClasses));
   var win = window.open("./results.html", '_blank');
   win.focus();
-
 }
 
 function inefficentSingleClassRank(indiClass) {
