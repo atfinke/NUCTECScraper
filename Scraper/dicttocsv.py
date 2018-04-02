@@ -20,7 +20,10 @@ def saveDictionariesToCSV(dictionaries, fileName):
         csvContent += "\n"
     csvContent = csvFirstLine + "\n" + csvContent
 
-    path = os.path.expanduser("~/Desktop/" + fileName + ".csv")
+    if not os.path.exists("output"):
+        os.makedirs("output")
+
+    path = "output/" + fileName + ".csv"
     print("Saving CSV to " + path)
     with open(path, "w") as text_file:
         text_file.write(csvContent)

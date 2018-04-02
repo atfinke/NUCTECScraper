@@ -6,6 +6,7 @@ from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException
 
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.alert import Alert
 
 def authenticate(driver, username, password):
     print("=============")
@@ -48,6 +49,11 @@ def authenticate(driver, username, password):
 
     delay = 60;
     try:
+        try:
+            alert = driver.switch_to_alert()
+            alert.dismiss()
+        except:
+            pass
         myElem = WebDriverWait(driver, delay).until(EC.presence_of_element_located((By.ID, 'PTNUI_LAND_WRK_GROUPBOX14$PIMG')))
     except TimeoutException:
         print "Loading took too much time!"

@@ -14,6 +14,8 @@ from authcaesar import authenticate
 from scrapbluectec import scrapLoadedCTECPage
 from dicttocsv import saveDictionariesToCSV
 
+spacer = "   "
+
 def wait(driver, elementID, delay):
     try:
         myElem = WebDriverWait(driver, delay).until(EC.presence_of_element_located((By.ID, elementID)))
@@ -32,10 +34,10 @@ def fetchSubjectCTECs(driver, subject):
 
         print("Manage Classes Page -> Click Search CTECs")
         classesPageCTECRow = wait(driver, 'PTGP_STEP_DVW_PTGP_STEP_LABEL$7', 15)
-        sleep(1);
+        sleep(5);
         classesPageCTECRow.click();
 
-        print("- Waiting for careers to load")
+        print(spacer + "Waiting for careers to load")
         delay = 15;
         try:
             careerSelectorDropdown = WebDriverWait(driver, delay).until(EC.presence_of_element_located((By.CSS_SELECTOR, '#NW_CT_PB_SRCH_ACAD_CAREER')))
@@ -45,7 +47,7 @@ def fetchSubjectCTECs(driver, subject):
         driver.execute_script("document.querySelector('#NW_CT_PB_SRCH_ACAD_CAREER').value = 'UGRD'");
         driver.execute_script("document.querySelector('#NW_CT_PB_SRCH_ACAD_CAREER').onchange();");
 
-        print("- Waiting for subjects to load")
+        print(spacer + "Waiting for subjects to load")
         sleep(0.25);
         while driver.execute_script("return document.getElementById('processing').offsetParent == null") == False:
             sleep(0.5);
@@ -59,7 +61,7 @@ def fetchSubjectCTECs(driver, subject):
                 validClass = True;
 
         if (validClass):
-            print("- Found correct class subject")
+            print(spacer + "Found correct class subject")
             driver.execute_script("document.querySelector('#NW_CT_PB_SRCH_SUBJECT').value = '" + subject + "'");
             driver.execute_script("document.querySelector('#NW_CT_PB_SRCH_SUBJECT').onchange();");
         else:
@@ -67,10 +69,10 @@ def fetchSubjectCTECs(driver, subject):
     except Exception as e:
         print(subject + ": Something unexpected happened when loading manage classes page, skipping subject")
         print(subject + ": ERROR INFO - " + str(e) + "\n")
-        return;
+        return False;
 
     sleep(1);
-    print("- Waiting for single class results to load")
+    print(spacer + "Waiting for single class results to load")
     driver.execute_script("document.getElementById('NW_CT_PB_SRCH_SRCH_BTN').click();");
 
     # One off to get past main screen
@@ -91,7 +93,7 @@ def fetchSubjectCTECs(driver, subject):
     except Exception as e:
         print(subject + ": Something unexpected happened when loading inital CTEC results, skipping subject")
         print(subject + ": ERROR INFO - " + str(e) + "\n")
-        return;
+        return False;
 
     print("Manage Classes Page / CTEC Section -> Click CTEC Result")
     driver.find_element_by_id(classesPageCTECResultRow[0].get_attribute('id')).click();
@@ -107,8 +109,7 @@ def fetchSubjectCTECs(driver, subject):
         sleep(0.25)
 
     print("-------------")
-    print("- " + subject + ": Found " + str(len(fullCTECPageClassList)) + " classes in sidebar");
-    print("- Starting subject CTEC scrap")
+    print(subject + ": Found " + str(len(fullCTECPageClassList)) + " classes in sidebar");
 
     main_window = driver.current_window_handle;
     scrappedCTECs = [];
@@ -126,17 +127,17 @@ def fetchSubjectCTECs(driver, subject):
             driver.execute_script("document.getElementById('" + classRow.get_attribute('id') + "').click();")
             classNumber = classRow.get_attribute('innerText').split('-')[0];
         except Exception as e:
-            print("- " + str(classNumber) + ": Something unexpected happened when loading all class CTEC results, skipping class")
-            print("- " + str(classNumber) + ": ERROR INFO - " + str(e) + "\n")
+            print(spacer + subject + " " + str(classNumber) + ": Something unexpected happened when loading all class CTEC results, skipping class")
+            print(spacer + subject + " " + str(classNumber) + ": ERROR INFO - " + str(e) + "\n")
             continue;
 
-        print("-- " + str(classNumber) + ": Starting")
+        print(spacer + subject + " " + str(classNumber) + ": Starting")
 
         try:
             updatedResults = False;
             updatedCheckCount = 0;
 
-            print("-- Waiting 3 seconds to load")
+            print(spacer + spacer + "Waiting 3 seconds to load")
             sleep(5);
 
             while (updatedResults == False and updatedCheckCount < 30):
@@ -159,12 +160,12 @@ def fetchSubjectCTECs(driver, subject):
                     sleep(1);
 
             if updatedResults == False or updatedCheckCount == 30:
-                print("-- No CTEC result rows loaded, skipping class")
+                print(spacer + spacer + "No CTEC result rows loaded, skipping class" + "\n")
                 continue;
 
         except Exception as e:
-            print("-- Something unexpected happened when reading CTEC result rows, skipping class")
-            print("-- ERROR INFO - " + str(e) + "\n")
+            print(spacer + spacer + "Something unexpected happened when reading CTEC result rows, skipping class")
+            print(spacer + spacer + "ERROR INFO - " + str(e) + "\n")
             continue;
 
         scrappedRows = 0;
@@ -183,8 +184,8 @@ def fetchSubjectCTECs(driver, subject):
                 driver.execute_script("document.getElementById('" + resultRow.get_attribute('id') + "').click();")
                 WebDriverWait(driver, 10).until(lambda d: len(d.window_handles) == 2)
             except Exception as e:
-                print("-- Something unexpected happened when clicking a CTEC result row, skipping row")
-                print("-- ERROR INFO - " + str(e) + "\n")
+                print(spacer + spacer + "Something unexpected happened when clicking a CTEC result row, skipping row")
+                print(spacer + spacer + "ERROR INFO - " + str(e) + "\n")
                 sleep(2);
                 continue;
 
@@ -225,22 +226,23 @@ def fetchSubjectCTECs(driver, subject):
                     scrap["shortName"] = name.replace(",", "|");
                     scrappedCTECs.append(scrap);
                 else:
-                    print("--- CTEC page empty")
+                    print(spacer + spacer + spacer + "CTEC page empty")
 
-                print("--- Class Progress: " + str(scrappedRows) + "/" + str(len(classCTECResultRow)))
+                print(spacer + spacer + "Class Progress: " + str(scrappedRows) + "/" + str(len(classCTECResultRow)))
             elif onlyOldResultsLeft:
-                print("--- Only old CTECs left, skipping the rest")
+                print(spacer + spacer + "Only old CTECs left, skipping the rest")
             else:
-                print("--- Invalid CTEC Page (Probably the bluera homepage)")
-                print("--- Class Progress: " + str(scrappedRows) + "/" + str(len(classCTECResultRow)))
+                print(spacer + spacer + "Invalid CTEC Page (Probably the bluera homepage)")
+                print(spacer + spacer + "Class Progress: " + str(scrappedRows) + "/" + str(len(classCTECResultRow)))
 
             driver.close()
             driver.switch_to.window(driver.window_handles[0])
 
-        print("-- Subject Progress: " + str(scrappedClasses) + "/" + str(len(fullCTECPageClassList)))
+        print(spacer + "Subject Progress: " + str(scrappedClasses) + "/" + str(len(fullCTECPageClassList)) + "\n")
 
 
     saveDictionariesToCSV(scrappedCTECs, subject + "-CTECs");
+    return True
 
 
 if __name__ == "__main__":
@@ -287,6 +289,8 @@ if __name__ == "__main__":
     #     # fetchClassData(driver, args.Term, args.Subject, args.ClassID)
     # else:
 
+    # AAL,AFST,AF_AM_ST,ALT_CERT,AMER_ST,AMES,ANIM_ART,ANTHRO,ARABIC,ART,ART_HIST,ASIAN_AM,ASIAN_LC,ASIAN_ST,ASTRON,BIOL_SCI,BMD_ENG,BUS_INST,CAT,CFS,CHEM,CHEM_ENG,CHINESE,CHRCH_MU,CIV_ENG,CIV_ENV,CLASSICS,CMN,COG_SCI,COMM_SCI,COMM_ST,COMP_LIT,COMP_SCI,CONDUCT,COOP,CRDV,CSD,DANCE,DSGN,EARTH,ECE,ECON,EDIT,EECS,ENGLISH,ENTREP,ENVR_POL,ENVR_SCI,ES_APPM,EUR_ST,EUR_TH,FRENCH,GBL_HLTH,GEN_CMN,GEN_ENG,GEN_LA,GEN_MUS,GEN_SPCH,GEOG,GEOL_SCI,GERMAN,GNDR_ST,GREEK,HDPS,HEBREW,HINDI,HIND_URD,HISTORY,HUM,IDEA,IEMS,IMC,INTG_ART,INTG_SCI,INTL_ST,ISEN,ITALIAN,JAPANESE,JAZZ_ST,JOUR,JWSH_ST,KELLG_FE,KELLG_MA,KOREAN,LATIN,LATINO,LATIN_AM,LDRSHP,LEGAL_ST,LING,LOC,LRN_DIS,MATH,MAT_SCI,MECH_ENG,MENA,MFG_ENG,MMSS,MUSIC,MUSICOL,MUSIC_ED,MUS_COMP,MUS_TECH,MUS_THRY,NEUROSCI,PERF_ST,PERSIAN,PHIL,PHYSICS,PIANO,POLI_SCI,PORT,PRDV,PSYCH,RELIGION,RTVF,SESP,SHC,SLAVIC,SOCIOL,SOC_POL,SPANISH,SPCH,STAT,STRINGS,SWAHILI,TEACH_ED,THEATRE,TRANS,TURKISH,URBAN_ST,VOICE,WIND_PER,WM_ST,WRITING,YIDDISH
+
 
     subjects = [];
     if args.Subjects is not None:
@@ -295,7 +299,8 @@ if __name__ == "__main__":
         raise ValueError("Must specify -s in Subject Fetch");
 
     # Driver
-    driver = webdriver.Safari();
+    driver = webdriver.Firefox(executable_path = "/usr/local/bin/geckodriver");
+    driver.set_window_size(1000, 1000)
 
     # Authenticate
     authenticate(driver, args.NetID, args.Password);
@@ -308,6 +313,12 @@ if __name__ == "__main__":
         # try to overcome peoplesoft timeout
         ActionChains(driver).move_by_offset(50,50).perform();
 
-        fetchSubjectCTECs(driver, subject);
+        if not fetchSubjectCTECs(driver, subject):
+            # try once more if it fails
+            sleep(5)
+            url = "https://caesar.ent.northwestern.edu/";
+            driver.get(url);
+            wait(driver, 'PTNUI_LAND_WRK_GROUPBOX14$PIMG', 15);
+            fetchSubjectCTECs(driver, subject)
 
     driver.quit();
