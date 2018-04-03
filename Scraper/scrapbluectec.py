@@ -32,7 +32,7 @@ def scrapLoadedCTECPage(driver):
             classProperties["instructor"] = textSplit[len(textSplit) -
                                                       1][:-1].replace(",", "|")
 
-            if "Student Report for " in text
+            if "Student Report for " in text:
                 classProperties["name"] = text[:-len(textSplit[len(textSplit) - 1])][len(
                     "Student Report for "):].rstrip('(').rstrip(' ')
             else:
