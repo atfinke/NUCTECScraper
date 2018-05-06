@@ -80,7 +80,7 @@ def fetchSubjectCTECs(driver, subject):
     except Exception as e:
         print(subject + ": Something unexpected happened when loading manage classes page, skipping subject")
         print(subject + ": ERROR INFO - " + str(e) + "\n")
-        return False
+        return None
 
     sleep(1)
     print(spacer + "Waiting for single class results to load")
@@ -101,11 +101,11 @@ def fetchSubjectCTECs(driver, subject):
             sleep(0.25)
             if checkCount > 60:
                 print(subject + ": No CTEC results, skipping subject")
-                return
+                return None
     except Exception as e:
         print(subject + ": Something unexpected happened when loading inital CTEC results, skipping subject")
         print(subject + ": ERROR INFO - " + str(e) + "\n")
-        return False
+        return None
 
     print("Manage Classes Page / CTEC Section -> Click CTEC Result")
     driver.find_element_by_id(
@@ -202,7 +202,8 @@ def fetchSubjectCTECs(driver, subject):
                 name = driver.find_element_by_id(
                     "MYDESCR$" + str(scrappedRows - 1)).get_attribute("innerText")
 
-                instructor = driver.find_element_by_id("CTEC_INSTRUCTOR$" + str(scrappedRows - 1)).get_attribute("innerText")
+                instructor = driver.find_element_by_id(
+                    "CTEC_INSTRUCTOR$" + str(scrappedRows - 1)).get_attribute("innerText")
 
                 driver.execute_script(
                     "document.getElementById('" + resultRow.get_attribute('id') + "').click();")
@@ -250,7 +251,7 @@ def fetchSubjectCTECs(driver, subject):
 
                 scrap = scrapLoadedCTECPage(driver)
                 if len(scrap) > 0:
-                    scrap["shortName"] = name.replace(",", "|")
+                    scrap["caesar_title"] = name.replace(",", "|")
                     scrap["instructor"] = instructor
                     scrappedCTECs.append(scrap)
                 else:
@@ -272,8 +273,7 @@ def fetchSubjectCTECs(driver, subject):
         print(spacer + "Subject Progress: " + str(scrappedClasses) +
               "/" + str(len(fullCTECPageClassList)) + "\n")
 
-    saveDictionariesToCSV(scrappedCTECs, subject + "-CTECs")
-    return True
+    return scrappedCTECs
 
 
 if __name__ == "__main__":
@@ -285,15 +285,11 @@ if __name__ == "__main__":
     required = parser.add_argument_group('required arguments')
     optional = parser.add_argument_group('optional arguments')
 
-    # required.add_argument("-m", "--Mode", type=str, help='Script Mode. "Class" = Class Fetch, "Subject" = Subject Fetch.');
     required.add_argument("-s", '--Subjects', type=str,
                           help='Subjects in Caesar. Case-sensitive, comma seperated (i.e. "MATH,CHEM")')
 
     required.add_argument("-n", "--NetID", type=str)
     required.add_argument("-p", "--Password", type=str)
-
-    # optional.add_argument("-t", "--Term", type=str, help='Class term. Only valid for class fetch mode. Case-sensitive (i.e. Fall 2017)');
-    # optional.add_argument("-i", "--ClassID", type=str, help='Class ID term. Only valid for class fetch mode (i.e. 230)');
 
     args = parser.parse_args()
 
@@ -301,32 +297,12 @@ if __name__ == "__main__":
         raise ValueError("NetID requried.")
     elif args.Password is None:
         raise ValueError("Password requried.")
-    # if args.Mode is None:
-    #     raise ValueError("Script mode requried.")
-    # elif args.Mode != "Class" and args.Mode != "Subject":
-    #     raise ValueError("Invalid mode.")
-    # elif args.NetID is None:
-    #     raise ValueError("NetID requried.")
-    # elif args.Password is None:
-    #     raise ValueError("Password requried.")
-    # elif args.Mode == "Class":
-    #     if args.Term is None:
-    #         raise ValueError("Term requried.")
-    #     elif args.ClassID is None:
-    #         raise ValueError("Class ID requried.")
-
-    # if args.Mode == "C":
-    #     print("Class fetch is currently broken (Built for old Caesar)")
-    #     # fetchClassData(driver, args.Term, args.Subject, args.ClassID)
-    # else:
-
-    #
-
 
     subjects = []
     if args.Subjects is not None:
         if args.Subjects == "ALL":
-            subjects = "ANTHRO,ARABIC,ART,ART_HIST,ASIAN_AM,ASIAN_LC,ASIAN_ST,ASTRON,BIOL_SCI,BMD_ENG,BUS_INST,CAT,CFS,CHEM,CHEM_ENG,CHINESE,CHRCH_MU,CIV_ENG,CIV_ENV,CLASSICS,CMN,COG_SCI,COMM_SCI,COMM_ST,COMP_LIT,COMP_SCI,CONDUCT,COOP,CRDV,CSD,DANCE,DSGN,EARTH,ECE,ECON,EDIT,EECS,ENGLISH,ENTREP,ENVR_POL,ENVR_SCI,ES_APPM,EUR_ST,EUR_TH,FRENCH,GBL_HLTH,GEN_CMN,GEN_ENG,GEN_LA,GEN_MUS,GEN_SPCH,GEOG,GEOL_SCI,GERMAN,GNDR_ST,GREEK,HDPS,HEBREW,HINDI,HIND_URD,HISTORY,HUM,IDEA,IEMS,IMC,INTG_ART,INTG_SCI,INTL_ST,ISEN,ITALIAN,JAPANESE,JAZZ_ST,JOUR,JWSH_ST,KELLG_FE,KELLG_MA,KOREAN,LATIN,LATINO,LATIN_AM,LDRSHP,LEGAL_ST,LING,LOC,LRN_DIS,MATH,MAT_SCI,MECH_ENG,MENA,MFG_ENG,MMSS,MUSIC,MUSICOL,MUSIC_ED,MUS_COMP,MUS_TECH,MUS_THRY,NEUROSCI,PERF_ST,PERSIAN,PHIL,PHYSICS,PIANO,POLI_SCI,PORT,PRDV,PSYCH,RELIGION,RTVF,SESP,SHC,SLAVIC,SOCIOL,SOC_POL,SPANISH,SPCH,STAT,STRINGS,SWAHILI,TEACH_ED,THEATRE,TRANS,TURKISH,URBAN_ST,VOICE,WIND_PER,WM_ST,WRITING,YIDDISH".split(',')
+            subjects = "ANTHRO,ARABIC,ART,ART_HIST,ASIAN_AM,ASIAN_LC,ASIAN_ST,ASTRON,BIOL_SCI,BMD_ENG,BUS_INST,CAT,CFS,CHEM,CHEM_ENG,CHINESE,CHRCH_MU,CIV_ENG,CIV_ENV,CLASSICS,CMN,COG_SCI,COMM_SCI,COMM_ST,COMP_LIT,COMP_SCI,CONDUCT,COOP,CRDV,CSD,DANCE,DSGN,EARTH,ECE,ECON,EDIT,EECS,ENGLISH,ENTREP,ENVR_POL,ENVR_SCI,ES_APPM,EUR_ST,EUR_TH,FRENCH,GBL_HLTH,GEN_CMN,GEN_ENG,GEN_LA,GEN_MUS,GEN_SPCH,GEOG,GEOL_SCI,GERMAN,GNDR_ST,GREEK,HDPS,HEBREW,HINDI,HIND_URD,HISTORY,HUM,IDEA,IEMS,IMC,INTG_ART,INTG_SCI,INTL_ST,ISEN,ITALIAN,JAPANESE,JAZZ_ST,JOUR,JWSH_ST,KELLG_FE,KELLG_MA,KOREAN,LATIN,LATINO,LATIN_AM,LDRSHP,LEGAL_ST,LING,LOC,LRN_DIS,MATH,MAT_SCI,MECH_ENG,MENA,MFG_ENG,MMSS,MUSIC,MUSICOL,MUSIC_ED,MUS_COMP,MUS_TECH,MUS_THRY,NEUROSCI,PERF_ST,PERSIAN,PHIL,PHYSICS,PIANO,POLI_SCI,PORT,PRDV,PSYCH,RELIGION,RTVF,SESP,SHC,SLAVIC,SOCIOL,SOC_POL,SPANISH,SPCH,STAT,STRINGS,SWAHILI,TEACH_ED,THEATRE,TRANS,TURKISH,URBAN_ST,VOICE,WIND_PER,WM_ST,WRITING,YIDDISH".split(
+                ',')
         else:
             subjects = args.Subjects.split(',')
     else:
@@ -347,12 +323,15 @@ if __name__ == "__main__":
         # try to overcome peoplesoft timeout
         ActionChains(driver).move_by_offset(50, 50).perform()
 
-        if not fetchSubjectCTECs(driver, subject):
+        scrappedCTECs = fetchSubjectCTECs(driver, subject)
+        if not scrappedCTECs:
             # try once more if it fails
             sleep(5)
             url = "https://caesar.ent.northwestern.edu/"
             driver.get(url)
             wait(driver, 'PTNUI_LAND_WRK_GROUPBOX14$PIMG', 15)
             fetchSubjectCTECs(driver, subject)
+        else:
+            saveDictionariesToCSV(scrappedCTECs, subject + "-CTECs")
 
     driver.quit()

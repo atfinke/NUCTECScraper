@@ -18,22 +18,16 @@ def scrapLoadedCTECPage(driver):
         sleeps += 1
         for element in driver.find_elements_by_tag_name("span"):
             text = element.text
-            if "Student Report for " in text or "Topics " in text:
+            if "Course and Teacher Evaluations are intended solely for the use of faculty" in text:
                 foundStudentReport = True
+
+    for element in driver.find_elements_by_class_name("coverPageTitleBlock"):
+        classProperties["report_title"] = element.get_attribute("innerText")
+        break
 
     for element in driver.find_elements_by_tag_name("span"):
         text = element.text
-
-        if "Student Report for " in text or "Topics " in text:
-            textSplit = text.split("(")
-            if "Student Report for " in text:
-                classProperties["name"] = text[:-len(textSplit[len(textSplit) - 1])][len(
-                    "Student Report for "):].rstrip('(').rstrip(' ')
-            else:
-                classProperties["name"] = text[:-
-                                               len(textSplit[len(textSplit) - 1])].rstrip('(').rstrip(' ')
-
-        elif "Course and Teacher Evaluations CTEC " in text:
+        if "Course and Teacher Evaluations CTEC " in text:
             classProperties["term"] = text[len(
                 "Course and Teacher Evaluations CTEC "):]
         elif "_lblSubjectName" in element.get_attribute("id"):
@@ -49,19 +43,19 @@ def scrapLoadedCTECPage(driver):
         ratingScript = """ return document.getElementById('""" + element.get_attribute(
             "id") + """').querySelector('td[headers="statValueID Mean"]').innerHTML; """
         if "Provide an overall rating of the instruction" in title:
-            classProperties["ratingInstruction"] = driver.execute_script(
+            classProperties["rating_instruction"] = driver.execute_script(
                 ratingScript)
         elif "Provide an overall rating of the course." in title:
-            classProperties["ratingCourse"] = driver.execute_script(
+            classProperties["rating_course"] = driver.execute_script(
                 ratingScript)
         elif "Estimate how much you learned in the course." in title:
-            classProperties["ratingLearned"] = driver.execute_script(
+            classProperties["rating_learned"] = driver.execute_script(
                 ratingScript)
         elif "Rate the effectiveness of the course in challenging you intellectually." in title:
-            classProperties["ratingChallenging"] = driver.execute_script(
+            classProperties["rating_challenging"] = driver.execute_script(
                 ratingScript)
         elif "Rate the effectiveness of the instructor in stimulating your interest in the subject." in title:
-            classProperties["ratingInterest"] = driver.execute_script(
+            classProperties["rating_interest"] = driver.execute_script(
                 ratingScript)
 
     for key in classProperties:
