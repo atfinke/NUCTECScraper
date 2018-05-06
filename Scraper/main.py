@@ -1,6 +1,8 @@
 import urllib2
 import argparse
 
+import logging
+
 from time import sleep
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
@@ -26,36 +28,36 @@ def wait(driver, elementID, delay):
         print "Loading took too much time!"
 
 
-def fetchSubjectCTECs(driver, subject):
-    print("=============")
+def fetchSubjectCTECs(driver, logger, subject):
+    logger.info("=============")
 
     try:
         sleep(1)
-        print("Main Page -> Click Manage Classes")
+        logger.info("Main Page -> Click Manage Classes")
         mainPageManageClassesButton = wait(
             driver, 'PTNUI_LAND_REC14$0_row_8', 15)
         mainPageManageClassesButton.click()
 
-        print("Manage Classes Page -> Click Search CTECs")
+        logger.info("Manage Classes Page -> Click Search CTECs")
         classesPageCTECRow = wait(
             driver, 'PTGP_STEP_DVW_PTGP_STEP_LABEL$7', 15)
         sleep(5)
         classesPageCTECRow.click()
 
-        print(spacer + "Waiting for careers to load")
+        logger.info(spacer + "Waiting for careers to load")
         delay = 15
         try:
             careerSelectorDropdown = WebDriverWait(driver, delay).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, '#NW_CT_PB_SRCH_ACAD_CAREER')))
         except TimeoutException:
-            print "Loading took too much time!"
+            logger.error("Loading took too much time!")
 
         driver.execute_script(
             "document.querySelector('#NW_CT_PB_SRCH_ACAD_CAREER').value = 'UGRD'")
         driver.execute_script(
             "document.querySelector('#NW_CT_PB_SRCH_ACAD_CAREER').onchange();")
 
-        print(spacer + "Waiting for subjects to load")
+        logger.info(spacer + "Waiting for subjects to load")
         sleep(0.25)
         while driver.execute_script("return document.getElementById('processing').offsetParent == null") == False:
             sleep(0.5)
@@ -70,7 +72,7 @@ def fetchSubjectCTECs(driver, subject):
                 validClass = True
 
         if (validClass):
-            print(spacer + "Found correct class subject")
+            logger.info(spacer + "Found correct class subject")
             driver.execute_script(
                 "document.querySelector('#NW_CT_PB_SRCH_SUBJECT').value = '" + subject + "'")
             driver.execute_script(
@@ -78,12 +80,13 @@ def fetchSubjectCTECs(driver, subject):
         else:
             raise ValueError("Couldn't find subject")
     except Exception as e:
-        print(subject + ": Something unexpected happened when loading manage classes page, skipping subject")
-        print(subject + ": ERROR INFO - " + str(e) + "\n")
+        logger.error(
+            subject + ": Something unexpected happened when loading manage classes page, skipping subject")
+        logger.error(subject + ": ERROR INFO - " + str(e) + "\n")
         return None
 
     sleep(1)
-    print(spacer + "Waiting for single class results to load")
+    logger.info(spacer + "Waiting for single class results to load")
     driver.execute_script(
         "document.getElementById('NW_CT_PB_SRCH_SRCH_BTN').click();")
 
@@ -100,14 +103,15 @@ def fetchSubjectCTECs(driver, subject):
                     break
             sleep(0.25)
             if checkCount > 60:
-                print(subject + ": No CTEC results, skipping subject")
+                logger.warning(subject + ": No CTEC results, skipping subject")
                 return None
     except Exception as e:
-        print(subject + ": Something unexpected happened when loading inital CTEC results, skipping subject")
-        print(subject + ": ERROR INFO - " + str(e) + "\n")
+        logger.error(
+            subject + ": Something unexpected happened when loading inital CTEC results, skipping subject")
+        logger.error(subject + ": ERROR INFO - " + str(e) + "\n")
         return None
 
-    print("Manage Classes Page / CTEC Section -> Click CTEC Result")
+    logger.info("Manage Classes Page / CTEC Section -> Click CTEC Result")
     driver.find_element_by_id(
         classesPageCTECResultRow[0].get_attribute('id')).click()
     wait(driver, 'NW_CT_PV4_DRV$0_row_0', 30)
@@ -121,9 +125,9 @@ def fetchSubjectCTECs(driver, subject):
                 fullCTECPageClassList.append(link)
         sleep(0.25)
 
-    print("-------------")
-    print(subject + ": Found " +
-          str(len(fullCTECPageClassList)) + " classes in sidebar")
+    logger.info("-------------")
+    logger.info(subject + ": Found " +
+                str(len(fullCTECPageClassList)) + " classes in sidebar")
 
     main_window = driver.current_window_handle
     scrappedCTECs = []
@@ -142,19 +146,19 @@ def fetchSubjectCTECs(driver, subject):
                 "document.getElementById('" + classRow.get_attribute('id') + "').click();")
             classNumber = classRow.get_attribute('innerText').split('-')[0]
         except Exception as e:
-            print(spacer + subject + " " + str(classNumber) +
-                  ": Something unexpected happened when loading all class CTEC results, skipping class")
-            print(spacer + subject + " " + str(classNumber) +
-                  ": ERROR INFO - " + str(e) + "\n")
+            logger.error(spacer + subject + " " + str(classNumber) +
+                         ": Something unexpected happened when loading all class CTEC results, skipping class")
+            logger.error(spacer + subject + " " + str(classNumber) +
+                         ": ERROR INFO - " + str(e) + "\n")
             continue
 
-        print(spacer + subject + " " + str(classNumber) + ": Starting")
+        logger.info(spacer + subject + " " + str(classNumber) + ": Starting")
 
         try:
             updatedResults = False
             updatedCheckCount = 0
 
-            print(spacer + spacer + "Waiting 2 seconds to load")
+            logger.info(spacer + spacer + "Waiting 2 seconds to load")
             sleep(2)
 
             while (updatedResults == False and updatedCheckCount < 30):
@@ -178,14 +182,14 @@ def fetchSubjectCTECs(driver, subject):
                     sleep(1)
 
             if updatedResults == False or updatedCheckCount == 30:
-                print(spacer + spacer +
-                      "No CTEC result rows loaded, skipping class" + "\n")
+                logger.warning(spacer + spacer +
+                               "No CTEC result rows loaded, skipping class" + "\n")
                 continue
 
         except Exception as e:
-            print(spacer + spacer +
-                  "Something unexpected happened when reading CTEC result rows, skipping class")
-            print(spacer + spacer + "ERROR INFO - " + str(e) + "\n")
+            logger.error(spacer + spacer +
+                         "Something unexpected happened when reading CTEC result rows, skipping class")
+            logger.error(spacer + spacer + "ERROR INFO - " + str(e) + "\n")
             continue
 
         scrappedRows = 0
@@ -210,9 +214,9 @@ def fetchSubjectCTECs(driver, subject):
                 WebDriverWait(driver, 10).until(
                     lambda d: len(d.window_handles) == 2)
             except Exception as e:
-                print(
+                logger.error(
                     spacer + spacer + "Something unexpected happened when clicking a CTEC result row, skipping row")
-                print(spacer + spacer + "ERROR INFO - " + str(e) + "\n")
+                logger.error(spacer + spacer + "ERROR INFO - " + str(e) + "\n")
                 sleep(2)
                 continue
 
@@ -246,7 +250,7 @@ def fetchSubjectCTECs(driver, subject):
                 except TimeoutException:
                     driver.close()
                     driver.switch_to.window(driver.window_handles[0])
-                    print "Loading took too much time!"
+                    logger.error("Loading took too much time!")
                     continue
 
                 scrap = scrapLoadedCTECPage(driver)
@@ -255,23 +259,25 @@ def fetchSubjectCTECs(driver, subject):
                     scrap["instructor"] = instructor
                     scrappedCTECs.append(scrap)
                 else:
-                    print(spacer + spacer + spacer + "CTEC page empty")
+                    logger.warning(spacer + spacer +
+                                   spacer + "CTEC page empty")
 
-                print(spacer + spacer + "Class Progress: " +
-                      str(scrappedRows) + "/" + str(len(classCTECResultRow)))
+                logger.info(spacer + spacer + "Class Progress: " +
+                            str(scrappedRows) + "/" + str(len(classCTECResultRow)))
             elif onlyOldResultsLeft:
-                print(spacer + spacer + "Only old CTECs left, skipping the rest")
+                logger.info(spacer + spacer +
+                            "Only old CTECs left, skipping the rest")
             else:
-                print(spacer + spacer +
-                      "Invalid CTEC Page (Probably the bluera homepage)")
-                print(spacer + spacer + "Class Progress: " +
-                      str(scrappedRows) + "/" + str(len(classCTECResultRow)))
+                logger.warning(spacer + spacer +
+                               "Invalid CTEC Page (Probably the bluera homepage)")
+                logger.info(spacer + spacer + "Class Progress: " +
+                            str(scrappedRows) + "/" + str(len(classCTECResultRow)))
 
             driver.close()
             driver.switch_to.window(driver.window_handles[0])
 
-        print(spacer + "Subject Progress: " + str(scrappedClasses) +
-              "/" + str(len(fullCTECPageClassList)) + "\n")
+        logger.info(spacer + "Subject Progress: " + str(scrappedClasses) +
+                    "/" + str(len(fullCTECPageClassList)) + "\n")
 
     return scrappedCTECs
 
