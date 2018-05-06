@@ -14,6 +14,7 @@ from main import wait
 from main import fetchSubjectCTECs
 from dicttocsv import saveDictionariesToCSV
 
+from extendedscrapbluectec import scrapLoadedCTECPage
 
 def mp_worker((subjects, delay)):
     sleep(int(delay))
@@ -74,6 +75,14 @@ def chunks(l, n):
 
 
 if __name__ == '__main__':
+    driver = webdriver.Firefox(executable_path="/usr/local/bin/geckodriver")
+    driver.set_window_size(1000, 1000)
+    url = "https://northwestern.bluera.com/northwestern/rpv-eng.aspx?lang=eng&redi=1&SelectedIDforPrint=2231f8733d0d6e023ec7f5f438f4d32e07c20c30323fcb7aae8454caa88838aa3c476ce38c4a6a72602a47fadfeb23b0&ReportType=2&regl=en-US"
+    driver.get(url)
+
+    scrapLoadedCTECPage(driver)
+    raise ValueError("Password requried.")
+
     parser = argparse.ArgumentParser()
     parser._action_groups.pop()
 
