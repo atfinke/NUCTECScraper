@@ -56,7 +56,11 @@ def mp_worker((subjects, delay)):
             url = "https://caesar.ent.northwestern.edu/"
             driver.get(url)
             wait(driver, 'PTNUI_LAND_WRK_GROUPBOX14$PIMG', 15)
-            fetchSubjectCTECs(driver, logger, subject)
+            scrappedCTECs = fetchSubjectCTECs(driver, logger, subject)
+            if scrappedCTECs:
+                saveDictionariesToCSV(scrappedCTECs, subject + "-CTECs")
+            else:
+                print("Skipping " + subject)
         else:
             saveDictionariesToCSV(scrappedCTECs, subject + "-CTECs")
 
@@ -90,16 +94,16 @@ if __name__ == '__main__':
     subjects = "ANTHRO,ARABIC,ART,ART_HIST,ASIAN_AM,ASIAN_LC,ASIAN_ST,ASTRON,BIOL_SCI,BMD_ENG,BUS_INST,CAT,CFS,CHEM,CHEM_ENG,CHINESE,CHRCH_MU,CIV_ENG,CIV_ENV,CLASSICS,CMN,COG_SCI,COMM_SCI,COMM_ST,COMP_LIT,COMP_SCI,CONDUCT,COOP,CRDV,CSD,DANCE,DSGN,EARTH,ECE,ECON,EDIT,EECS,ENGLISH,ENTREP,ENVR_POL,ENVR_SCI,ES_APPM,EUR_ST,EUR_TH,FRENCH,GBL_HLTH,GEN_CMN,GEN_ENG,GEN_LA,GEN_MUS,GEN_SPCH,GEOG,GEOL_SCI,GERMAN,GNDR_ST,GREEK,HDPS,HEBREW,HINDI,HIND_URD,HISTORY,HUM,IDEA,IEMS,IMC,INTG_ART,INTG_SCI,INTL_ST,ISEN,ITALIAN,JAPANESE,JAZZ_ST,JOUR,JWSH_ST,KELLG_FE,KELLG_MA,KOREAN,LATIN,LATINO,LATIN_AM,LDRSHP,LEGAL_ST,LING,LOC,LRN_DIS,MATH,MAT_SCI,MECH_ENG,MENA,MFG_ENG,MMSS,MUSIC,MUSICOL,MUSIC_ED,MUS_COMP,MUS_TECH,MUS_THRY,NEUROSCI,PERF_ST,PERSIAN,PHIL,PHYSICS,PIANO,POLI_SCI,PORT,PRDV,PSYCH,RELIGION,RTVF,SESP,SHC,SLAVIC,SOCIOL,SOC_POL,SPANISH,SPCH,STAT,STRINGS,SWAHILI,TEACH_ED,THEATRE,TRANS,TURKISH,URBAN_ST,VOICE,WIND_PER,WM_ST,WRITING,YIDDISH".split(
         ',')
 
-    driver_count = 2
+    driver_count = 10
     chunk_size = int(math.ceil(float(len(subjects)) / float(driver_count)))
     split_subjects = [subjects[i:i + chunk_size]
                       for i in xrange(0, len(subjects), chunk_size)]
 
     data = []
-    delay = 2
+    delay = 5
     for subject_split in split_subjects:
         subject_data = [subject_split, delay]
-        delay += 15
+        delay += 10
         data.append(subject_data)
 
     p = multiprocessing.Pool(driver_count)
