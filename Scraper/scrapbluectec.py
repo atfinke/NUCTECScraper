@@ -13,7 +13,7 @@ def scrapLoadedCTECPage(driver):
     sleeps = 0
     foundStudentReport = False
 
-    while (len(driver.find_elements_by_tag_name("table")) < 2 or not foundStudentReport) and sleeps < 100:
+    while (len(driver.find_elements_by_tag_name("table")) < 2 or not foundStudentReport) and sleeps < 10:
         sleep(0.15)
         sleeps += 1
         for element in driver.find_elements_by_tag_name("span"):
@@ -21,17 +21,11 @@ def scrapLoadedCTECPage(driver):
             if "Student Report for " in text or "Topics " in text:
                 foundStudentReport = True
 
-    if sleeps == 100:
-        return {}
-
     for element in driver.find_elements_by_tag_name("span"):
         text = element.text
 
         if "Student Report for " in text or "Topics " in text:
             textSplit = text.split("(")
-            classProperties["instructor"] = textSplit[len(textSplit) -
-                                                      1][:-1].replace(",", "|")
-
             if "Student Report for " in text:
                 classProperties["name"] = text[:-len(textSplit[len(textSplit) - 1])][len(
                     "Student Report for "):].rstrip('(').rstrip(' ')
