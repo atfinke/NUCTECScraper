@@ -104,3 +104,5 @@ ENV/
 
 
 DIS-API/output/*
+DB/input/*
+DB/CTEC.db

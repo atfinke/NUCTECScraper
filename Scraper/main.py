@@ -122,7 +122,7 @@ def fetchSubjectCTECs(driver, logger, subject):
         links = driver.find_elements_by_class_name("psc_rowact")
         for link in links:
             if "NW_CT_PV_DRV$0_row_" in link.get_attribute('id'):
-                fullCTECPageClassList.append(link)
+                fullCTECPageClassList.append(link.get_attribute('id'))
         sleep(0.25)
 
     logger.info("-------------")
@@ -135,153 +135,185 @@ def fetchSubjectCTECs(driver, logger, subject):
     scrappedClasses = 0
     lastClassCTECResultsRowsText = "N/A"
 
-    for classRow in fullCTECPageClassList:
+    for class_row_id in fullCTECPageClassList:
 
         scrappedClasses += 1
         sleep(5)
 
-        try:
-            # Click on the class on the left sidebar
-            driver.execute_script(
-                "document.getElementById('" + classRow.get_attribute('id') + "').click();")
-            classNumber = classRow.get_attribute('innerText').split('-')[0]
-        except Exception as e:
-            logger.error(spacer + subject + " " + str(classNumber) +
-                         ": Something unexpected happened when loading all class CTEC results, skipping class")
-            logger.error(spacer + subject + " " + str(classNumber) +
-                         ": ERROR INFO - " + str(e) + "\n")
-            continue
-
-        logger.info(spacer + subject + " " + str(classNumber) + ": Starting")
-
-        try:
-            updatedResults = False
-            updatedCheckCount = 0
-
-            logger.info(spacer + spacer + "Waiting 4 seconds to load")
-            sleep(4)
-
-            while (updatedResults == False and updatedCheckCount < 30):
-                updatedCheckCount += 1
-
-                classCTECResultRow = []
-                classCTECResultsRowsText = ""
-                links = driver.find_elements_by_class_name("psc_rowact")
-
-                for link in links:
-                    if "NW_CT_PV4_DRV$0_row_" in link.get_attribute('id'):
-                        classCTECResultRow.append(link)
-                        classCTECResultsRowsText += link.get_attribute(
-                            'innerText')
-
-                if classCTECResultsRowsText != lastClassCTECResultsRowsText and classCTECResultsRowsText != "":
-                    lastClassCTECResultsRowsText = classCTECResultsRowsText
-                    updatedResults = True
-
-                else:
-                    sleep(1)
-
-            if updatedResults == False or updatedCheckCount == 30:
-                logger.warning(spacer + spacer +
-                               "No CTEC result rows loaded, skipping class" + "\n")
-                continue
-
-        except Exception as e:
-            logger.error(spacer + spacer +
-                         "Something unexpected happened when reading CTEC result rows, skipping class")
-            logger.error(spacer + spacer + "ERROR INFO - " + str(e) + "\n")
-            continue
-
-        scrappedRows = 0
-        onlyOldResultsLeft = False
-        sleep(1)
-
-        for resultRow in classCTECResultRow:
-            if onlyOldResultsLeft:
-                break
+        attempts = 0
+        while attempts < 5:
+            attempts += 1
 
             try:
-                scrappedRows += 1
+                # Click on the class on the left sidebar
 
-                name = driver.find_element_by_id(
-                    "MYDESCR$" + str(scrappedRows - 1)).get_attribute("innerText")
+                class_row_element = driver.find_element_by_id(class_row_id)
+                class_row_element.click()
+                classNumber = class_row_element.get_attribute(
+                    'innerText').split('-')[0]
 
-                instructor = driver.find_element_by_id(
-                    "CTEC_INSTRUCTOR$" + str(scrappedRows - 1)).get_attribute("innerText")
+                try:
+                    ctecs, resultsRowsText = fetchClassCTECs(
+                        driver, logger, main_window, subject, classNumber, lastClassCTECResultsRowsText)
+                    scrappedCTECs.append(ctecs)
 
-                driver.execute_script(
-                    "document.getElementById('" + resultRow.get_attribute('id') + "').click();")
-                WebDriverWait(driver, 10).until(
-                    lambda d: len(d.window_handles) == 2)
+                    if resultsRowsText != "":
+                        lastClassCTECResultsRowsText = resultsRowsText
+
+                    break
+
+                except Exception as e:
+                    print(e)
+                    logger.error(spacer + subject + ": Trying class again\n")
+                    continue
             except Exception as e:
+                print(e)
                 logger.error(
-                    spacer + spacer + "Something unexpected happened when clicking a CTEC result row, skipping row")
-                logger.error(spacer + spacer + "ERROR INFO - " + str(e) + "\n")
-                sleep(2)
+                    spacer + subject + ": Something unexpected happened when loading all class CTEC results, skipping class")
+                logger.error(spacer + subject +
+                             ": ERROR INFO - " + str(e) + "\n")
                 continue
 
-            onCTECTab = False
-            validBluePage = False
-
-            while onCTECTab == False:
-                for handle in driver.window_handles:
-                    driver.switch_to.window(handle)
-                    sleep(0.1)
-                    if "Northwestern - " in driver.title:
-                        onCTECTab = True
-                        validBluePage = True
-                        break
-                    elif "NU:" in driver.title:
-                        onCTECTab = True
-                        validBluePage = False
-                        break
-                    elif "NU CTEC Published Reports" in driver.title:
-                        if handle != main_window:
-                            onCTECTab = True
-                            validBluePage = False
-                            onlyOldResultsLeft = True
-                            break
-
-            if validBluePage:
-                delay = 30
-                try:
-                    myElem = WebDriverWait(driver, delay).until(
-                        EC.presence_of_element_located((By.ID, 'reportView')))
-                except TimeoutException:
-                    driver.close()
-                    driver.switch_to.window(driver.window_handles[0])
-                    logger.error("Loading took too much time!")
-                    continue
-
-                scrap = scrapLoadedCTECPage(driver)
-                if len(scrap) > 1:
-                    scrap["report_caesar_title"] = name.replace(",", "|")
-                    scrap["report_caesar_instructor"] = instructor
-                    scrap["report_caesar_subject"] = subject
-                    scrap["report_caesar_class_number"] = classNumber
-                    scrappedCTECs.append(scrap)
-                else:
-                    logger.warning(spacer + spacer +
-                                   spacer + "CTEC page empty")
-
-                logger.info(spacer + spacer + "Class Progress: " +
-                            str(scrappedRows) + "/" + str(len(classCTECResultRow)))
-            elif onlyOldResultsLeft:
-                logger.info(spacer + spacer +
-                            "Only old CTECs left, skipping the rest")
-            else:
-                logger.warning(spacer + spacer +
-                               "Invalid CTEC Page (Probably the bluera homepage)")
-                logger.info(spacer + spacer + "Class Progress: " +
-                            str(scrappedRows) + "/" + str(len(classCTECResultRow)))
-
-            driver.close()
-            driver.switch_to.window(driver.window_handles[0])
+            logger.info(spacer + subject + " " +
+                        str(classNumber) + ": Starting")
 
         logger.info(spacer + "Subject Progress: " + str(scrappedClasses) +
                     "/" + str(len(fullCTECPageClassList)) + "\n")
 
     return scrappedCTECs
+
+
+def fetchClassCTECs(driver, logger, main_window, subject, classNumber, lastClassCTECResultsRowsText):
+    sleep(5)
+
+    classCTECResultsRowsText = ""
+
+    try:
+        updatedResults = False
+        updatedCheckCount = 0
+
+        logger.info(spacer + spacer + "Waiting 4 seconds to load")
+        sleep(4)
+
+        while (updatedResults == False and updatedCheckCount < 10):
+            updatedCheckCount += 1
+
+            classCTECResultRow = []
+            classCTECResultsRowsText = ""
+            links = driver.find_elements_by_class_name("psc_rowact")
+
+            for link in links:
+                if "NW_CT_PV4_DRV$0_row_" in link.get_attribute('id'):
+                    classCTECResultRow.append(link)
+                    classCTECResultsRowsText += link.get_attribute(
+                        'innerText')
+
+            if classCTECResultsRowsText != lastClassCTECResultsRowsText and classCTECResultsRowsText != "":
+                updatedResults = True
+
+            else:
+                sleep(1)
+
+        if updatedResults == False or updatedCheckCount == 30:
+            logger.warning(spacer + spacer +
+                           "No CTEC result rows loaded, skipping class" + "\n")
+            return [], classCTECResultsRowsText
+
+    except Exception as e:
+        logger.error(spacer + spacer +
+                     "Something unexpected happened when reading CTEC result rows, skipping class")
+        logger.error(spacer + spacer + "ERROR INFO - " + str(e) + "\n")
+
+    scrappedRows = 0
+    onlyOldResultsLeft = False
+    sleep(1)
+
+    new_subject_CTECs = []
+
+    for resultRow in classCTECResultRow:
+        if onlyOldResultsLeft:
+            break
+
+        try:
+            scrappedRows += 1
+
+            name = driver.find_element_by_id(
+                "MYDESCR$" + str(scrappedRows - 1)).get_attribute("innerText")
+
+            instructor = driver.find_element_by_id(
+                "CTEC_INSTRUCTOR$" + str(scrappedRows - 1)).get_attribute("innerText")
+
+            driver.execute_script(
+                "document.getElementById('" + resultRow.get_attribute('id') + "').click();")
+            WebDriverWait(driver, 10).until(
+                lambda d: len(d.window_handles) == 2)
+        except Exception as e:
+            logger.error(
+                spacer + spacer + "Something unexpected happened when clicking a CTEC result row, skipping row")
+            logger.error(spacer + spacer + "ERROR INFO - " + str(e) + "\n")
+            sleep(2)
+            continue
+
+        onCTECTab = False
+        validBluePage = False
+
+        while onCTECTab == False:
+            for handle in driver.window_handles:
+                driver.switch_to.window(handle)
+                sleep(0.1)
+                if "Northwestern - " in driver.title:
+                    onCTECTab = True
+                    validBluePage = True
+                    break
+                elif "NU:" in driver.title:
+                    onCTECTab = True
+                    validBluePage = False
+                    break
+                elif "NU CTEC Published Reports" in driver.title:
+                    if handle != main_window:
+                        onCTECTab = True
+                        validBluePage = False
+                        onlyOldResultsLeft = True
+                        break
+
+        if validBluePage:
+            delay = 30
+            try:
+                myElem = WebDriverWait(driver, delay).until(
+                    EC.presence_of_element_located((By.ID, 'reportView')))
+            except TimeoutException:
+                driver.close()
+                driver.switch_to.window(driver.window_handles[0])
+                logger.error("Loading took too much time!")
+                continue
+
+            scrap = scrapLoadedCTECPage(driver)
+            if len(scrap) > 1:
+                scrap["report_caesar_title"] = name.replace(",", "|")
+                scrap["report_caesar_instructor"] = instructor
+                scrap["report_caesar_subject"] = subject
+                scrap["report_caesar_career"] = "Undergraduate"
+                scrap["report_caesar_class_number"] = classNumber
+                new_subject_CTECs.append(scrap)
+            else:
+                logger.warning(spacer + spacer +
+                               spacer + "CTEC page empty")
+
+            logger.info(spacer + spacer + "Class Progress: " +
+                        str(scrappedRows) + "/" + str(len(classCTECResultRow)))
+        elif onlyOldResultsLeft:
+            logger.info(spacer + spacer +
+                        "Only old CTECs left, skipping the rest")
+        else:
+            logger.warning(spacer + spacer +
+                           "Invalid CTEC Page (Probably the bluera homepage)")
+            logger.info(spacer + spacer + "Class Progress: " +
+                        str(scrappedRows) + "/" + str(len(classCTECResultRow)))
+
+        driver.close()
+        driver.switch_to.window(driver.window_handles[0])
+
+    return new_subject_CTECs, classCTECResultsRowsText
 
 
 if __name__ == "__main__":
