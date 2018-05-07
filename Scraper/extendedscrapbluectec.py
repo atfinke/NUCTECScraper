@@ -1,7 +1,6 @@
 from time import sleep
 from selenium import webdriver
 
-
 def scrapLoadedCTECPage(driver):
     def removeElements(text):
         return text.replace("\n", " ").replace(",", ".").replace("  ", " ")
@@ -11,44 +10,39 @@ def scrapLoadedCTECPage(driver):
     }
 
     sleeps = 0
-    foundStudentReport = False
-
     result_tables = []
 
-    while (len(result_tables) < 1 or not foundStudentReport) and sleeps < 10:
-        sleep(0.15)
+    while len(result_tables) < 1 and sleeps < 10:
+        sleep(0.05)
         sleeps += 1
         result_tables = driver.find_elements_by_class_name("CondensedTabularFixedHalfWidth")
-        for element in driver.find_elements_by_tag_name("span"):
-            text = element.text
-            if "Course and Teacher Evaluations are intended solely for the use of faculty" in text:
-                foundStudentReport = True
 
     for element in driver.find_elements_by_class_name("coverPageTitleBlock"):
         report_details["report_ctec_title"] = element.get_attribute("innerText")
         break
 
-    for element in driver.find_elements_by_tag_name("span"):
-        text = element.text
-        if "Course and Teacher Evaluations CTEC " in text:
-            report_details["report_term"] = text[len("Course and Teacher Evaluations CTEC "):]
-        elif "_lblSubjectName" in element.get_attribute("id"):
-            report_details["report_term"] = text.split("Course and Teacher Evaluations CTEC ")[1]
-        elif "_lblResponded" in element.get_attribute("id"):
-            report_details["report_response_count"] = text
-        elif "_lblRespRateValue" in element.get_attribute("id"):
-            report_details["report_response_percent"] = text
+    cover_elements = driver.find_elements_by_class_name("coverFullTitle")
+    if len(cover_elements) > 0:
+        cover_span_elements = cover_elements[0].find_elements_by_tag_name("span")
+        for element in cover_span_elements:
+            text = element.text
+            element_id = element.get_attribute("id")
+            if "Course and Teacher Evaluations CTEC " in text:
+                report_details["report_term"] = text[len("Course and Teacher Evaluations CTEC "):]
+            elif "_lblSubjectName" in element_id:
+                report_details["report_term"] = text.split("Course and Teacher Evaluations CTEC ")[1]
+            elif "_lblResponded" in element_id:
+                report_details["report_response_count"] = text
+            elif "_lblInvited" in element_id:
+                report_details["report_invited_count"] = text
 
-    result_tables = driver.find_elements_by_class_name("CondensedTabularFixedHalfWidth")
     for table in result_tables:
         summary = table.get_attribute("summary")
-        print(summary)
 
         if "Provide an overall rating of the instruction" in summary:
             rows = table.find_elements_by_tag_name("tr")
             if len(rows) > 2:
                 headers = rows[1].find_elements_by_tag_name("td")
-                print(headers)
                 if len(headers) > 0:
                     report_details["course_instruction_rating_response_count"] = headers[0].text
                 data = rows[2].find_elements_by_tag_name("td")
@@ -58,7 +52,6 @@ def scrapLoadedCTECPage(driver):
             rows = table.find_elements_by_tag_name("tr")
             if len(rows) > 2:
                 headers = rows[1].find_elements_by_tag_name("td")
-                print(headers)
                 if len(headers) > 0:
                     report_details["course_overall_rating_response_count"] = headers[0].text
                 data = rows[2].find_elements_by_tag_name("td")
@@ -68,17 +61,15 @@ def scrapLoadedCTECPage(driver):
             rows = table.find_elements_by_tag_name("tr")
             if len(rows) > 2:
                 headers = rows[1].find_elements_by_tag_name("td")
-                print(headers)
                 if len(headers) > 0:
-                    report_details["course_learning_rating_response_count"] = headers[0].text
+                    report_details["course_learned_rating_response_count"] = headers[0].text
                 data = rows[2].find_elements_by_tag_name("td")
                 if len(data) > 0:
-                    report_details["course_learning_rating_mean"] = data[0].text
+                    report_details["course_learned_rating_mean"] = data[0].text
         elif "Rate the effectiveness of the course in challenging you intellectually" in summary:
             rows = table.find_elements_by_tag_name("tr")
             if len(rows) > 2:
                 headers = rows[1].find_elements_by_tag_name("td")
-                print(headers)
                 if len(headers) > 0:
                     report_details["course_challenging_rating_response_count"] = headers[0].text
                 data = rows[2].find_elements_by_tag_name("td")
@@ -88,7 +79,6 @@ def scrapLoadedCTECPage(driver):
             rows = table.find_elements_by_tag_name("tr")
             if len(rows) > 2:
                 headers = rows[1].find_elements_by_tag_name("td")
-                print(headers)
                 if len(headers) > 0:
                     report_details["course_interest_rating_response_count"] = headers[0].text
                 data = rows[2].find_elements_by_tag_name("td")
@@ -138,7 +128,6 @@ def scrapLoadedCTECPage(driver):
                             report_details["demographics_school_sps"] = data[0].text
                         elif idx == 10:
                             report_details["demographics_school_wcas"] = data[0].text
-
         elif "Your Class" in summary:
             rows = table.find_elements_by_tag_name("tr")
             if len(rows) > 6:
@@ -157,10 +146,9 @@ def scrapLoadedCTECPage(driver):
                             report_details["demographics_class_graduate"] = data[0].text
                         elif idx == 6:
                             report_details["demographics_class_other"] = data[0].text
-
         elif "What is your reason for taking the course" in summary:
             rows = table.find_elements_by_tag_name("tr")
-            if len(rows) > 6:
+            if len(rows) > 5:
                 for idx, row in enumerate(rows):
                     data = row.find_elements_by_tag_name("td")
                     if len(data) > 0:
@@ -174,36 +162,30 @@ def scrapLoadedCTECPage(driver):
                             report_details["demographics_reason_requirement_none"] = data[0].text
                         elif idx == 5:
                             report_details["demographics_reason_requirement_other"] = data[0].text
-
-        ""
-        ""
-        ""
-        ""
-        ""
-
-        "demographics_previous_interest_1"
-        "demographics_previous_interest_2"
-        "demographics_previous_interest_3"
-        "demographics_previous_interest_4"
-        "demographics_previous_interest_5"
-        "demographics_previous_interest_6"
-
-
+        elif "What was your Interest in this subject before taking the course" in summary:
+            rows = table.find_elements_by_tag_name("tr")
+            if len(rows) > 5:
+                for idx, row in enumerate(rows):
+                    data = row.find_elements_by_tag_name("td")
+                    if len(data) > 0:
+                        if idx == 1:
+                            report_details["demographics_previous_interest_1"] = data[0].text
+                        elif idx == 2:
+                            report_details["demographics_previous_interest_2"] = data[0].text
+                        elif idx == 3:
+                            report_details["demographics_previous_interest_3"] = data[0].text
+                        elif idx == 4:
+                            report_details["demographics_previous_interest_4"] = data[0].text
+                        elif idx == 5:
+                            report_details["demographics_previous_interest_5"] = data[0].text
+                        elif idx == 6:
+                            report_details["demographics_previous_interest_6"] = data[0].text
 
 
     for key in report_details:
         report_details[key] = removeElements(report_details[key])
 
-    pretty(report_details)
     return report_details
-
-def pretty(d, indent=0):
-   for key, value in d.items():
-      print('\t' * indent + str(key))
-      if isinstance(value, dict):
-         pretty(value, indent+1)
-      else:
-         print('\t' * (indent+1) + str(value))
 
 def scrapCTECPage(driver, url):
     driver.get(url)

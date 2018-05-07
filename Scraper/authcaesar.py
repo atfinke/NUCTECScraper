@@ -40,7 +40,7 @@ def authenticate(driver, username, password):
 
     for _ in range(5):
         try:
-            driver.execute_script("LoginSubmit('Continue'); return false;");
+            driver.execute_script("window.alert = function() {};LoginSubmit('Continue'); return false;window.alert = function() {};");
         except:
             pass;
         sleep(1);
@@ -49,11 +49,6 @@ def authenticate(driver, username, password):
 
     delay = 60;
     try:
-        try:
-            alert = driver.switch_to_alert()
-            alert.dismiss()
-        except:
-            pass
         myElem = WebDriverWait(driver, delay).until(EC.presence_of_element_located((By.ID, 'PTNUI_LAND_WRK_GROUPBOX14$PIMG')))
     except TimeoutException:
         print "Loading took too much time!"

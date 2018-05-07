@@ -13,7 +13,7 @@ from selenium.webdriver import ActionChains
 
 
 from authcaesar import authenticate
-from scrapbluectec import scrapLoadedCTECPage
+from extendedscrapbluectec import scrapLoadedCTECPage
 from dicttocsv import saveDictionariesToCSV
 
 spacer = "   "
@@ -158,8 +158,8 @@ def fetchSubjectCTECs(driver, logger, subject):
             updatedResults = False
             updatedCheckCount = 0
 
-            logger.info(spacer + spacer + "Waiting 2 seconds to load")
-            sleep(2)
+            logger.info(spacer + spacer + "Waiting 4 seconds to load")
+            sleep(4)
 
             while (updatedResults == False and updatedCheckCount < 30):
                 updatedCheckCount += 1
@@ -254,9 +254,11 @@ def fetchSubjectCTECs(driver, logger, subject):
                     continue
 
                 scrap = scrapLoadedCTECPage(driver)
-                if len(scrap) > 0:
-                    scrap["caesar_title"] = name.replace(",", "|")
-                    scrap["instructor"] = instructor
+                if len(scrap) > 1:
+                    scrap["report_caesar_title"] = name.replace(",", "|")
+                    scrap["report_caesar_instructor"] = instructor
+                    scrap["report_caesar_subject"] = subject
+                    scrap["report_caesar_class_number"] = classNumber
                     scrappedCTECs.append(scrap)
                 else:
                     logger.warning(spacer + spacer +
