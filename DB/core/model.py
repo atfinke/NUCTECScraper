@@ -20,6 +20,7 @@ class CTEC(Base):
     report_caesar_instructor = Column(UnicodeText, nullable=False)
     report_caesar_subject = Column(UnicodeText, nullable=False)
     report_caesar_class_number = Column(UnicodeText, nullable=False)
+    report_caesar_career = Column(UnicodeText, nullable=False)
 
     report_ctec_title = Column(UnicodeText, nullable=False)
 
@@ -81,10 +82,9 @@ class CTEC(Base):
     __table_args__ = (
         PrimaryKeyConstraint(
             report_caesar_title,
-            report_caesar_instructor,
-            report_caesar_class_number,
-            report_term,
             report_ctec_title,
+            report_caesar_instructor,
+            report_term,
             report_url),
         {})
 
@@ -93,6 +93,7 @@ class CTEC(Base):
         self.report_caesar_instructor = dictionary["report_caesar_instructor"]
         self.report_caesar_subject = dictionary["report_caesar_subject"]
         self.report_caesar_class_number = dictionary["report_caesar_class_number"]
+        self.report_caesar_career = dictionary["report_caesar_career"]
 
         self.report_ctec_title = dictionary["report_ctec_title"]
 
