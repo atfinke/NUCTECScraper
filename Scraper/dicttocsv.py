@@ -79,10 +79,13 @@ def saveDictionariesToCSV(dictionaries, fileName):
         if idx != len(keys) - 1:
             csvFirstLine += ","
 
+        def removeElements(text):
+            return text.replace("\n", " ").replace(",", ".").replace("  ", " ")
+
     for dictionary in dictionaries:
         for idx, key in enumerate(keys):
             if key in dictionary:
-                csvContent += dictionary[key].encode('utf-8')
+                csvContent += removeElements(dictionary[key]).encode('utf-8')
             if idx != len(keys) - 1:
                 csvContent += ","
         csvContent += "\n"
@@ -92,6 +95,10 @@ def saveDictionariesToCSV(dictionaries, fileName):
         os.makedirs("output")
 
     path = "output/" + fileName + ".csv"
-    print("Saving CSV to " + path)
+    if "TEMP" not in path:
+        print("Saving CSV to " + path)
+
+
+
     with open(path, "w") as text_file:
         text_file.write(csvContent)

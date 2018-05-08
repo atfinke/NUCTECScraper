@@ -2,6 +2,7 @@ import urllib2
 import argparse
 
 import logging
+import os
 
 from time import sleep
 from selenium import webdriver
@@ -53,7 +54,7 @@ def fetchSubjectCTECs(driver, logger, subject):
             logger.error("Loading took too much time!")
 
         driver.execute_script(
-            "document.querySelector('#NW_CT_PB_SRCH_ACAD_CAREER').value = 'UGRD'")
+            "document.querySelector('#NW_CT_PB_SRCH_ACAD_CAREER').value = 'TGS'")
         driver.execute_script(
             "document.querySelector('#NW_CT_PB_SRCH_ACAD_CAREER').onchange();")
 
@@ -133,7 +134,7 @@ def fetchSubjectCTECs(driver, logger, subject):
     scrappedCTECs = []
 
     scrappedClasses = 0
-    lastClassCTECResultsRowsText = "N/A"
+    last_class_inner_html = "N/A"
 
     for class_row_id in fullCTECPageClassList:
 
@@ -152,77 +153,88 @@ def fetchSubjectCTECs(driver, logger, subject):
                 classNumber = class_row_element.get_attribute(
                     'innerText').split('-')[0]
 
+                logger.info(spacer + subject + " " +
+                            str(classNumber) + ": Starting")
+
                 try:
                     ctecs, resultsRowsText = fetchClassCTECs(
-                        driver, logger, main_window, subject, classNumber, lastClassCTECResultsRowsText)
-                    scrappedCTECs.append(ctecs)
+                        driver, logger, main_window, subject, classNumber, last_class_inner_html)
+                    scrappedCTECs = scrappedCTECs + ctecs
 
                     if resultsRowsText != "":
-                        lastClassCTECResultsRowsText = resultsRowsText
+                        last_class_inner_html = resultsRowsText
 
                     break
 
                 except Exception as e:
-                    print(e)
                     logger.error(spacer + subject + ": Trying class again\n")
                     continue
             except Exception as e:
-                print(e)
                 logger.error(
                     spacer + subject + ": Something unexpected happened when loading all class CTEC results, skipping class")
                 logger.error(spacer + subject +
                              ": ERROR INFO - " + str(e) + "\n")
                 continue
 
-            logger.info(spacer + subject + " " +
-                        str(classNumber) + ": Starting")
+        saveDictionariesToCSV(scrappedCTECs, "_TEMP-" + subject + "-CTECs")
 
         logger.info(spacer + "Subject Progress: " + str(scrappedClasses) +
                     "/" + str(len(fullCTECPageClassList)) + "\n")
 
+    try:
+        os.remove("output/_TEMP-" + subject + "-CTECs")
+    except:
+        pass
+
     return scrappedCTECs
 
 
-def fetchClassCTECs(driver, logger, main_window, subject, classNumber, lastClassCTECResultsRowsText):
+def fetchClassCTECs(driver, logger, main_window, subject, classNumber, last_class_inner_html):
     sleep(5)
 
-    classCTECResultsRowsText = ""
+    class_inner_html = ""
 
     try:
         updatedResults = False
         updatedCheckCount = 0
 
-        logger.info(spacer + spacer + "Waiting 4 seconds to load")
-        sleep(4)
+        logger.info(spacer + spacer + "Waiting 3 seconds to load")
+        sleep(3)
 
         while (updatedResults == False and updatedCheckCount < 10):
             updatedCheckCount += 1
 
             classCTECResultRow = []
-            classCTECResultsRowsText = ""
+            class_inner_html = ""
             links = driver.find_elements_by_class_name("psc_rowact")
+            class_inner_html = driver.find_element_by_id("NW_CT_PUB_RSLT_FL").get_attribute('innerHTML')
 
             for link in links:
                 if "NW_CT_PV4_DRV$0_row_" in link.get_attribute('id'):
                     classCTECResultRow.append(link)
-                    classCTECResultsRowsText += link.get_attribute(
-                        'innerText')
 
-            if classCTECResultsRowsText != lastClassCTECResultsRowsText and classCTECResultsRowsText != "":
+            if class_inner_html != last_class_inner_html and class_inner_html != "":
                 updatedResults = True
 
             else:
                 sleep(1)
 
-        if updatedResults == False or updatedCheckCount == 30:
+        if updatedResults == False:
             logger.warning(spacer + spacer +
-                           "No CTEC result rows loaded, skipping class" + "\n")
-            return [], classCTECResultsRowsText
+                           "No CTEC result rows loaded, (same inner html) skipping class" + "\n")
+            logger.warning(class_inner_html)
+
+            raise ValueError("no rows found")
+        elif updatedCheckCount == 10:
+            logger.warning(spacer + spacer +
+                           "No CTEC result rows loaded, (timeout) skipping class" + "\n")
+            raise ValueError("no rows found")
 
     except Exception as e:
         logger.error(spacer + spacer +
                      "Something unexpected happened when reading CTEC result rows, skipping class")
         logger.error(spacer + spacer + "ERROR INFO - " + str(e) + "\n")
+        raise e
 
     scrappedRows = 0
     onlyOldResultsLeft = False
@@ -292,7 +304,7 @@ def fetchClassCTECs(driver, logger, main_window, subject, classNumber, lastClass
                 scrap["report_caesar_title"] = name.replace(",", "|")
                 scrap["report_caesar_instructor"] = instructor
                 scrap["report_caesar_subject"] = subject
-                scrap["report_caesar_career"] = "Undergraduate"
+                scrap["report_caesar_career"] = "The Graduate School"
                 scrap["report_caesar_class_number"] = classNumber
                 new_subject_CTECs.append(scrap)
             else:
@@ -313,7 +325,10 @@ def fetchClassCTECs(driver, logger, main_window, subject, classNumber, lastClass
         driver.close()
         driver.switch_to.window(driver.window_handles[0])
 
-    return new_subject_CTECs, classCTECResultsRowsText
+    if len(new_subject_CTECs) == 0:
+        raise ValueError("no ctecs found")
+
+    return new_subject_CTECs, class_inner_html
 
 
 if __name__ == "__main__":
