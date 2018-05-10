@@ -104,12 +104,12 @@ function theMostInefficentSortingFunction(classes) {
     if (rank == 0 || isNaN(rank)) {
       continue;
     }
-    ranks[newClass["shortName"] + newClass["instructor"] + newClass["ratingCourse"]] = rank;
+    ranks[newClass["report_caesar_title"] + newClass["report_caesar_instructor"] + newClass["course_overall_rating_mean"] + newClass["report_term"]] = rank;
 
     var insertedClass = false;
     for (var sortedClassIndex = 0; sortedClassIndex < sortedClasses.length; sortedClassIndex++) {
       var sortedClass = sortedClasses[sortedClassIndex]
-      var sortedClassRank = ranks[sortedClass["shortName"] + sortedClass["instructor"] + sortedClass["ratingCourse"]];
+      var sortedClassRank = ranks[sortedClass["report_caesar_title"] + sortedClass["report_caesar_instructor"] + sortedClass["course_overall_rating_mean"] + sortedClass["report_term"]];
       if (rank > sortedClassRank) {
           sortedClasses.splice(sortedClassIndex, 0, newClass);
           insertedClass = true;
@@ -145,44 +145,44 @@ function inefficentSingleClassRank(indiClass) {
     return 0;
   }
 
-  if (indiClass["ratingCourse"] == null) {
+  if (indiClass["course_overall_rating_mean"] == null) {
     return 0;
   }
 
-  if (parseInt(indiClass["responded"]) < document.querySelector('input[name="responsesNeeded"]').value) {
+  if (parseInt(indiClass["report_response_count"]) < document.querySelector('input[name="responsesNeeded"]').value) {
     return 0;
   }
 
   var rank = 0.0;
 
   if (overallRatingFactor == FactorEnum.positive) {
-    rank += parseFloat(indiClass["ratingCourse"]);
+    rank += parseFloat(indiClass["course_overall_rating_mean"]);
   } else if (overallRatingFactor == FactorEnum.negative) {
-    rank += (6 - parseFloat(indiClass["ratingCourse"]));
+    rank += (6 - parseFloat(indiClass["course_overall_rating_mean"]));
   }
 
   if (learningFactor == FactorEnum.positive) {
-    rank += parseFloat(indiClass["ratingLearned"]);
+    rank += parseFloat(indiClass["course_learned_rating_mean"]);
   } else if (learningFactor == FactorEnum.negative) {
-    rank += (6 - parseFloat(indiClass["ratingLearned"]));
+    rank += (6 - parseFloat(indiClass["course_learned_rating_mean"]));
   }
 
   if (challengingFactor == FactorEnum.positive) {
-    rank += parseFloat(indiClass["ratingChallenging"]);
+    rank += parseFloat(indiClass["course_challenging_rating_mean"]);
   } else if (challengingFactor == FactorEnum.negative) {
-    rank += (6 - parseFloat(indiClass["ratingChallenging"]));
+    rank += (6 - parseFloat(indiClass["course_challenging_rating_mean"]));
   }
 
   if (stimulatingFactor == FactorEnum.positive) {
-    rank += parseFloat(indiClass["ratingInterest"]);
+    rank += parseFloat(indiClass["course_interest_rating_mean"]);
   } else if (stimulatingFactor == FactorEnum.negative) {
-    rank += (6 - parseFloat(indiClass["ratingInterest"]));
+    rank += (6 - parseFloat(indiClass["course_interest_rating_mean"]));
   }
 
   if (professorFactor == FactorEnum.positive) {
-    rank += parseFloat(indiClass["ratingInstruction"]);
+    rank += parseFloat(indiClass["course_instruction_rating_mean"]);
   } else if (professorFactor == FactorEnum.negative) {
-    rank += (6 - parseFloat(indiClass["ratingInstruction"]));
+    rank += (6 - parseFloat(indiClass["course_instruction_rating_mean"]));
   }
 
   return rank;

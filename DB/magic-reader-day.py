@@ -17,7 +17,7 @@ matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 
 
-def graphEECSProfessorAverage():
+def graphDepartmentTermsByKeyAverage(count, mean, subject_filter):
     # [professor] = {
     #     winter 2015: 5,
     #     spring 2016: 10.
@@ -32,27 +32,33 @@ def graphEECSProfessorAverage():
     for year in years:
         for quarter in quarters:
             term = quarter + " " + year
+            if year == "2018" and quarter != "Winter":
+                continue
             terms.append(term)
 
             instructor_ratings = {}
-            for entry in session.query(core.model.CTEC).filter(core.model.CTEC.report_caesar_subject == "EECS").filter(core.model.CTEC.report_term == term):
-                if entry.course_instruction_rating_response_count and entry.course_instruction_rating_mean:
+            for entry in session.query(core.model.CTEC).filter(core.model.CTEC.report_caesar_subject == subject_filter).filter(core.model.CTEC.report_term == term):
+
+                entry_count = getattr(entry, count)
+                entry_mean = getattr(entry, mean)
+
+                if entry_count and entry_mean:
                     instructor = entry.report_caesar_instructor
                     if instructor in instructor_ratings:
                         info = {
-                            "count": entry.course_instruction_rating_response_count,
-                            "mean": entry.course_instruction_rating_mean
+                            "count": entry_count,
+                            "mean": entry_mean
                         }
                         instructor_ratings[instructor].append(info)
                         instructor_cumulative_ratings[instructor].append(info)
                     else:
                         instructor_ratings[instructor] = [{
-                            "count": entry.course_instruction_rating_response_count,
-                            "mean": entry.course_instruction_rating_mean
+                            "count": entry_count,
+                            "mean": entry_mean
                         }]
                         instructor_cumulative_ratings[instructor] = [{
-                            "count": entry.course_instruction_rating_response_count,
-                            "mean": entry.course_instruction_rating_mean
+                            "count": entry_count,
+                            "mean": entry_mean
                         }]
 
             for key, value in instructor_ratings.items():
@@ -94,7 +100,7 @@ def graphEECSProfessorAverage():
 
     fig = plt.figure(0)
 
-    fig.canvas.set_window_title("Winter 2015 - Fall 2017")
+    fig.canvas.set_window_title(mean)
     size = math.ceil(math.sqrt(len(valid_professors)))
 
     for index, professor in enumerate(sorted(valid_professors)):
@@ -147,24 +153,31 @@ def graphEECSProfessorAverage():
     # plt.figure(figsize=(8, 6), dpi=80)
 
 
-def rankProfessorByAverage():
+def rankProfessorByKeyAverage(count, mean, subject_filter):
     instructor_ratings = {}
     instructor_subjects = {}
     for entry in session.query(core.model.CTEC):
-        if entry.course_instruction_rating_response_count and entry.course_instruction_rating_mean:
+        if subject_filter != None:
+            if subject_filter != entry.report_caesar_subject:
+                continue
+
+        entry_count = getattr(entry, count)
+        entry_mean = getattr(entry, mean)
+
+        if entry_count and entry_mean:
             instructor = entry.report_caesar_instructor
             if instructor in instructor_ratings:
                 info = {
-                    "count": entry.course_instruction_rating_response_count,
-                    "mean": entry.course_instruction_rating_mean
+                    "count": entry_count,
+                    "mean": entry_mean
                 }
                 ratings = instructor_ratings[instructor]
                 ratings.append(info)
                 instructor_ratings[instructor] = ratings
             else:
                 instructor_ratings[instructor] = [{
-                    "count": entry.course_instruction_rating_response_count,
-                    "mean": entry.course_instruction_rating_mean
+                    "count": entry_count,
+                    "mean": entry_mean
                 }]
 
             if instructor in instructor_subjects:
@@ -208,24 +221,31 @@ def rankProfessorByAverage():
     #
 
 
-def rankProfessorByTotal():
+def rankProfessorByKeyTotal(count, mean, subject_filter):
     instructor_ratings = {}
     instructor_subjects = {}
     for entry in session.query(core.model.CTEC):
-        if entry.course_instruction_rating_response_count and entry.course_instruction_rating_mean:
+        if subject_filter != None:
+            if subject_filter != entry.report_caesar_subject:
+                continue
+
+        entry_count = getattr(entry, count)
+        entry_mean = getattr(entry, mean)
+
+        if entry_count and entry_mean:
             instructor = entry.report_caesar_instructor
             if instructor in instructor_ratings:
                 info = {
-                    "count": entry.course_instruction_rating_response_count,
-                    "mean": entry.course_instruction_rating_mean
+                    "count": entry_count,
+                    "mean": entry_mean
                 }
                 ratings = instructor_ratings[instructor]
                 ratings.append(info)
                 instructor_ratings[instructor] = ratings
             else:
                 instructor_ratings[instructor] = [{
-                    "count": entry.course_instruction_rating_response_count,
-                    "mean": entry.course_instruction_rating_mean
+                    "count": entry_count,
+                    "mean": entry_mean
                 }]
 
             if instructor in instructor_subjects:
@@ -251,8 +271,6 @@ def rankProfessorByTotal():
     last_rank_value = 6.0
     raw_rank = 0
 
-    # s = sorted(s, key = lambda x: (x[1], x[2]))
-
     for key in reversed(sorted(condensed_instructor_ratings,
                                key=lambda k: (condensed_instructor_ratings[k], condensed_instructor_ratings_count[k]))):
         raw_rank += 1
@@ -273,118 +291,176 @@ def rankProfessorByTotal():
             condensed_instructor_ratings_count[key]) + ") (A: " + average + ") (S: " + ", ".join(str(x) for x in instructor_subjects[key]) + ")")
 
 
+def update(instructor_ratings, entry, key_mean, key_count):
+
+    key_total = key_mean + "_total"
+    instructor = entry.report_caesar_instructor
+
+    entry_count = getattr(entry, key_count)
+    entry_mean = getattr(entry, key_mean)
+
+    if entry_count and entry_mean:
+        if instructor in instructor_ratings and instructor_ratings[instructor]:
+            if key_count in instructor_ratings[instructor]:
+                instructor_ratings[instructor][key_total] += entry_mean * entry_count
+                instructor_ratings[instructor][key_count] += entry_count
+            else:
+                instructor_ratings[instructor][key_total] = entry_mean * entry_count
+                instructor_ratings[instructor][key_count] = entry_count
+        else:
+            instructor_ratings[instructor] = {
+                key_total: entry_mean * entry_count,
+                key_count: entry_count
+            }
+    if instructor in instructor_ratings:
+        return instructor_ratings[instructor]
+    else:
+        return {}
+
+
+def createProfessorsTable(subject_filter):
+    instructor_ratings = {}
+    instructor_subjects = {}
+
+    for entry in session.query(core.model.CTEC):
+        if subject_filter != None:
+            if subject_filter != entry.report_caesar_subject:
+                continue
+
+        instructor = entry.report_caesar_instructor
+
+        instructor_ratings[instructor] = update(instructor_ratings, entry, "course_instruction_rating_mean",
+                                                "course_instruction_rating_response_count")
+        instructor_ratings[instructor] = update(instructor_ratings, entry, "course_overall_rating_mean",
+                                                "course_overall_rating_response_count")
+        instructor_ratings[instructor] = update(instructor_ratings, entry, "course_learned_rating_mean",
+                                                "course_learned_rating_response_count")
+        instructor_ratings[instructor] = update(instructor_ratings, entry, "course_challenging_rating_mean",
+                                                "course_challenging_rating_response_count")
+        instructor_ratings[instructor] = update(instructor_ratings, entry, "course_interest_rating_mean",
+                                                "course_interest_rating_response_count")
+
+        if instructor in instructor_subjects:
+            subjects = instructor_subjects[instructor]
+            subjects.append(entry.report_caesar_subject)
+            instructor_subjects[instructor] = list(set(subjects))
+        else:
+            instructor_subjects[instructor] = [entry.report_caesar_subject]
+
+    for key, value in instructor_ratings.items():
+        dict = {}
+        dict["name"] = key
+        dict["subjects"] = ", ".join(str(x) for x in instructor_subjects[key])
+
+        response_count = 0
+
+        if "course_instruction_rating_response_count" in value:
+            mean_key = "course_instruction_rating_mean"
+            key_total = mean_key + "_total"
+            count = value["course_instruction_rating_response_count"]
+            dict[mean_key] = value[key_total] / count
+            if response_count == 0:
+                response_count = count
+
+        if "course_overall_rating_response_count" in value:
+            mean_key = "course_overall_rating_mean"
+            key_total = mean_key + "_total"
+            count = value["course_overall_rating_response_count"]
+            dict[mean_key] = value[key_total] / count
+            if response_count == 0:
+                response_count = count
+
+        if "course_learned_rating_response_count" in value:
+            mean_key = "course_learned_rating_mean"
+            key_total = mean_key + "_total"
+            count = value["course_learned_rating_response_count"]
+            dict[mean_key] = value[key_total] / count
+            if response_count == 0:
+                response_count = count
+
+        if "course_challenging_rating_response_count" in value:
+            mean_key = "course_challenging_rating_mean"
+            key_total = mean_key + "_total"
+            count = value["course_challenging_rating_response_count"]
+            dict[mean_key] = value[key_total] / count
+            if response_count == 0:
+                response_count = count
+
+        if "course_interest_rating_response_count" in value:
+            mean_key = "course_interest_rating_mean"
+            key_total = mean_key + "_total"
+            count = value["course_interest_rating_response_count"]
+            dict[mean_key] = value[key_total] / count
+            if response_count == 0:
+                response_count = count
+
+        dict["response_count"] = response_count
+        obj = core.model.Instructor(dict)
+        try:
+            session.add(obj)
+            session.commit()
+        except Exception as e:
+            print(e)
+            session.rollback()
+
+
 if __name__ == '__main__':
-
-    # os.remove("CTEC.db")
-    engine = create_engine(
-        'sqlite:///' + "CTEC.db")
-
-    core.model.CTEC.metadata.bind = engine
-    core.model.CTEC.metadata.create_all()
-
+    engine = create_engine('sqlite:///' + "CTEC.db")
+    core.model.Base.metadata.create_all(engine)
     session = sessionmaker(bind=engine)()
 
-    #
     # for file_name in glob.glob("./input/*.csv"):
     #     with open(file_name, mode='r', encoding='utf-8') as infile:
     #         reader = csv.DictReader(infile)
     #         for row in reader:
-    #             if row["report_caesar_instructor"] != "Borislava Miltcheva" and "Advanced Conceptual Workshop" not in row["report_caesar_title"]:
-    #                 obj = core.model.CTEC(row)
-    #                 try:
-    #                     session.add(obj)
-    #                     session.commit()
-    #                 except Exception as e:
-    #                     print(row)
-    #                     print(e)
-    #                     print()
-    #                     session.rollback()
+    #             print(row)
+    #             obj = core.model.CTEC(row)
+    #             try:
+    #                 session.add(obj)
+    #                 session.commit()
+    #             except Exception as e:
+    #                 session.rollback()
 
-    rankByAverage()
-    # graphEECSProfessorAverage()
+    # createProfessorsTable(None)
 
-    count = 0
+    # graphDepartmentTermsByKeyAverage(
+    #     "course_instruction_rating_response_count", "course_instruction_rating_mean", "EECS")
+
+    # graphDepartmentTermsByKeyAverage(
+    #     "course_overall_rating_response_count", "course_overall_rating_mean", "EECS")
+    #
+    # graphDepartmentTermsByKeyAverage(
+    #     "course_learned_rating_response_count", "course_learned_rating_mean", "EECS")
+    #
+    # graphDepartmentTermsByKeyAverage(
+    #     "course_challenging_rating_response_count", "course_challenging_rating_mean", "EECS")
+
+    # print("\n================\n\nINSTRUCTION\n")
+    # rankProfessorByKeyAverage(
+    #     "course_instruction_rating_response_count", "course_instruction_rating_mean", "EECS")
+    #
+    # print("\n================\n\nOVERALL\n")
+    # rankProfessorByKeyAverage(
+    #     "course_overall_rating_response_count", "course_overall_rating_mean", "EECS")
+
+    # print("\n================\n\nLEARNED\n")
+    # rankProfessorByKeyAverage(
+    #     "course_learned_rating_response_count", "course_learned_rating_mean", None)
+    #
+    # print("\n================\n\nCHALLENGED\n")
+    # rankProfessorByKeyAverage(
+    #     "course_challenging_rating_response_count", "course_challenging_rating_mean", None)
+    # rankProfessorByTotal(None)
+
+    # rankProfessorByKeyTotal("course_instruction_rating_response_count",
+    #                         "course_instruction_rating_mean", "EECS")
+
+    ctec_count = 0
+    response_count = 0
 
     for entry in session.query(core.model.CTEC):
-        count += entry.report_response_count
+        ctec_count += 1
+        response_count += entry.report_response_count
 
-    print(count)
-
-    # park_filtered_attraction_ids = []
-    # for attraction_id in attraction_ids:
-    #     facility = session.query(core.model.Facility).filter(
-    #         core.model.Facility.id == attraction_id).first()
-    #     if facility:
-    #         if filter_park:
-    #             if filter_park == facility.location_theme_park_id:
-    #                 attraction_ids_names[attraction_id] = facility.name
-    #                 park_filtered_attraction_ids.append(attraction_id)
-    #             else:
-    #                 print("Filter: Wrong park - " + facility.name)
-    #         else:
-    #             attraction_ids_names[attraction_id] = facility.name
-    #             park_filtered_attraction_ids.append(attraction_id)
-    #     else:
-    #         attraction_ids_names[attraction_id] = attraction_id
-    #         park_filtered_attraction_ids.append(attraction_id)
-    #
-    # sorted_attraction_ids = sorted(
-    #     attraction_ids_names, key=lambda k: attraction_ids_names[k])
-    #
-    # final_attraction_ids = []
-    # if filter_none:
-    #     for attraction_id in park_filtered_attraction_ids:
-    #         had_wait_times = False
-    #         for time_key in entries.keys():
-    #             if attraction_id in entries[time_key]:
-    #                 wait = entries[time_key][attraction_id].posted_minutes
-    #                 if wait:
-    #                     had_wait_times = True
-    #                     break
-    #
-    #         if had_wait_times:
-    #             final_attraction_ids.append(attraction_id)
-    #         else:
-    #             print("Filter: No wait times - " +
-    #                   attraction_ids_names[attraction_id])
-    # else:
-    #     final_attraction_ids = sorted_attraction_ids
-    #
-    # # Headers
-    # delimiter = "\t"
-    # csv_string = date + delimiter
-    # for attraction_id in final_attraction_ids:
-    #     csv_string += attraction_ids_names[attraction_id] + delimiter
-    # csv_string = csv_string[:-len(delimiter)]
-    # csv_string += "\n"
-    #
-    # wrote_first_line = False
-    # for time_key in entries.keys():
-    #
-    #     times_string = ""
-    #     valid_wait_time = False
-    #     for attraction_id in final_attraction_ids:
-    #         if attraction_id in entries[time_key]:
-    #             wait = entries[time_key][attraction_id].posted_minutes
-    #             if wait:
-    #                 times_string += str(wait) + delimiter
-    #                 valid_wait_time = True
-    #             else:
-    #                 times_string += delimiter
-    #         else:
-    #             times_string += delimiter
-    #
-    #     if not wrote_first_line and not valid_wait_time:
-    #         print("Filter: Skipping first time with no wait - " + time_key)
-    #         continue
-    #
-    #     csv_string += time_key + delimiter
-    #     csv_string = csv_string + times_string[:-len(delimiter)]
-    #     csv_string += "\n"
-    #     wrote_first_line = True
-    #
-    # print("Saving results from " + str(len(final_attraction_ids)) + " attractions")
-    # with open("output/" + date + ".csv", "w") as text_file:
-    #     text_file.write(csv_string)
-
-# posted_minutes
+    print("\n\nCTECS: " + str(ctec_count))
+    print("RESPONSES: " + str(response_count))

@@ -28,11 +28,11 @@ function loadData() {
 }
 
 function resultDiv(result) {
-  var innerHTML = "<div class='class-box' style='cursor: pointer;' onclick=\"openURL('" + result["url"] + "');\"><h3>" + result["shortName"].split('|').join(",") + "</h3>";
-  innerHTML += "<h4>" + result["instructor"] + " - " + result["term"] + "</h4>"
+  var innerHTML = "<div class='class-box' style='cursor: pointer;' onclick=\"openURL('" + result["report_url"] + "');\"><h3>" + result["report_caesar_title"].split('|').join(",") + "</h3>";
+  innerHTML += "<h4>" + result["report_caesar_instructor"] + " - " + result["report_term"] + "</h4>"
 
-  innerHTML += "<table class='class-box-table'><thead><tr><th class='class-box-header'>" + result["ratingCourse"] + "</th><th class='class-box-header'>" + result["ratingChallenging"] + "</th><th class='class-box-header'>" + result["ratingInterest"] + "</th>"
-  innerHTML += "<th class='class-box-header'>" + result["ratingLearned"] + "</th><th class='class-box-header'>" + result["ratingInstruction"] + "</th><th class='class-box-header'>" + result["responded"] + "</th></th></thead>"
+  innerHTML += "<table class='class-box-table'><thead><tr><th class='class-box-header'>" + result["course_overall_rating_mean"] + "</th><th class='class-box-header'>" + result["course_challenging_rating_mean"] + "</th><th class='class-box-header'>" + result["course_interest_rating_mean"] + "</th>"
+  innerHTML += "<th class='class-box-header'>" + result["course_learned_rating_mean"] + "</th><th class='class-box-header'>" + result["course_instruction_rating_mean"] + "</th><th class='class-box-header'>" + result["report_response_count"] + "</th></th></thead>"
 
   innerHTML += "<tbody><tr><td class='class-box-data'>OVERALL</td><td class='class-box-data'>CHALLENGE</td><td class='class-box-data'>INTEREST</td><td class='class-box-data'>LEARNED</td><td class='class-box-data'>PROF</td><td class='class-box-data'>RESPONSES</td></tr></tbody></table>"
 

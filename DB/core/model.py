@@ -19,7 +19,6 @@ class CTEC(Base):
     report_caesar_title = Column(UnicodeText, nullable=False)
     report_caesar_instructor = Column(UnicodeText, nullable=False)
     report_caesar_subject = Column(UnicodeText, nullable=False)
-    report_caesar_class_number = Column(UnicodeText, nullable=False)
     report_caesar_career = Column(UnicodeText, nullable=False)
 
     report_ctec_title = Column(UnicodeText, nullable=False)
@@ -92,7 +91,6 @@ class CTEC(Base):
         self.report_caesar_title = dictionary["report_caesar_title"]
         self.report_caesar_instructor = dictionary["report_caesar_instructor"]
         self.report_caesar_subject = dictionary["report_caesar_subject"]
-        self.report_caesar_class_number = dictionary["report_caesar_class_number"]
         self.report_caesar_career = dictionary["report_caesar_career"]
 
         self.report_ctec_title = dictionary["report_ctec_title"]
@@ -200,3 +198,53 @@ class CTEC(Base):
             self.demographics_previous_interest_6 = dictionary["demographics_previous_interest_6"]
 
         self.report_url = dictionary["report_url"]
+
+
+class Instructor(Base):
+    __tablename__ = 'Instructor'
+
+    name = Column(UnicodeText, nullable=False)
+    subjects = Column(UnicodeText, nullable=False)
+
+    response_count = Column(Integer, nullable=False)
+
+    course_instruction_rating_mean = Column(Float)
+    course_overall_rating_mean = Column(Float)
+    course_learned_rating_mean = Column(Float)
+    course_challenging_rating_mean = Column(Float)
+    course_interest_rating_mean = Column(Float)
+
+    __table_args__ = (
+        PrimaryKeyConstraint(
+            name),
+        {})
+
+    def __init__(self, dictionary):
+        self.name = dictionary["name"]
+        self.subjects = dictionary["subjects"]
+        self.response_count = dictionary["response_count"]
+
+        if "course_instruction_rating_mean" in dictionary and isfloat(dictionary[
+                "course_instruction_rating_mean"]):
+            self.course_instruction_rating_mean = dictionary[
+                "course_instruction_rating_mean"]
+
+        if "course_overall_rating_mean" in dictionary and isfloat(dictionary[
+                "course_overall_rating_mean"]):
+            self.course_overall_rating_mean = dictionary[
+                "course_overall_rating_mean"]
+
+        if "course_learned_rating_mean" in dictionary and isfloat(dictionary[
+                "course_learned_rating_mean"]):
+            self.course_learned_rating_mean = dictionary[
+                "course_learned_rating_mean"]
+
+        if "course_challenging_rating_mean" in dictionary and isfloat(dictionary[
+                "course_challenging_rating_mean"]):
+            self.course_challenging_rating_mean = dictionary[
+                "course_challenging_rating_mean"]
+
+        if "course_interest_rating_mean" in dictionary and isfloat(dictionary[
+                "course_interest_rating_mean"]):
+            self.course_interest_rating_mean = dictionary[
+                "course_interest_rating_mean"]
