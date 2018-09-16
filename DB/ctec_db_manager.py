@@ -17,6 +17,14 @@ matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 
 
+def fixed_string(string, length):
+    diff = length - len(string)
+    new_string = string
+    for _ in range(diff):
+        new_string += " "
+    return new_string
+
+
 def graphDepartmentTermsByKeyAverage(count, mean, subject_filter):
     # [professor] = {
     #     winter 2015: 5,
@@ -153,7 +161,7 @@ def graphDepartmentTermsByKeyAverage(count, mean, subject_filter):
     # plt.figure(figsize=(8, 6), dpi=80)
 
 
-def rankProfessorByKeyAverage(count, mean, subject_filter):
+def rankProfessorByKeyAverage(count, mean, subject_filter, limit, use_symbols):
     instructor_ratings = {}
     instructor_subjects = {}
     for entry in session.query(core.model.CTEC):
@@ -203,11 +211,18 @@ def rankProfessorByKeyAverage(count, mean, subject_filter):
     last_rank_value = 6.0
     raw_rank = 0
 
-    for key in reversed(sorted(condensed_instructor_ratings,
-                               key=lambda k: (condensed_instructor_ratings[k], condensed_instructor_ratings_count[k]))):
+    sorted_by_count = sorted(condensed_instructor_ratings,
+                             key=lambda k: condensed_instructor_ratings_count[k])
+
+    rating_format = "{0:.3f}"
+    if use_symbols:
+        rating_format = "{0:.3f}"
+
+    for key in reversed(sorted(sorted_by_count,
+                               key=lambda k: rating_format.format(condensed_instructor_ratings[k]))):
         raw_rank += 1
 
-        rating = "{0:.3f}".format(condensed_instructor_ratings[key])
+        rating = rating_format.format(condensed_instructor_ratings[key])
         rank = None
         if rating == last_rank_value:
             rank = last_rank
@@ -216,8 +231,42 @@ def rankProfessorByKeyAverage(count, mean, subject_filter):
             last_rank = raw_rank
             rank = last_rank
 
-        print(str(rank) + ". " + key + ": " + rating + " (N: " + str(
-            condensed_instructor_ratings_count[key]) + ") (S: " + ", ".join(str(x) for x in instructor_subjects[key]) + ")")
+        if limit and rank > limit:
+            break
+
+        if use_symbols:
+            star_rank = ""
+            for _ in range(int(float(rating) - 1)):
+                star_rank += u'\u22C6'
+
+            student_responses = "< 10"
+            student_responses_raw = condensed_instructor_ratings_count[key]
+
+            if student_responses_raw < 20:
+                student_responses = "10-20"
+            elif student_responses_raw < 50:
+                student_responses = "20-50"
+            elif student_responses_raw < 100:
+                student_responses = "50-100"
+            elif student_responses_raw < 500:
+                student_responses = "100-500"
+            elif student_responses_raw < 1000:
+                student_responses = "500-1k"
+            else:
+                student_responses = "1k+"
+
+            rank_pos = fixed_string(str(rank) + ". ", 6)
+            prof_name = fixed_string(key + ": ", 35)
+            star_rank = fixed_string(star_rank, 6)
+            student_responses = fixed_string(
+                "(N: " + student_responses + ")", 13)
+
+            print(rank_pos + prof_name + star_rank + student_responses +
+                  "(S: " + ", ".join(str(x) for x in instructor_subjects[key]) + ")")
+        else:
+            print(str(rank) + ". " + key + ": " + rating + " (N: " + str(
+                condensed_instructor_ratings_count[key]) + ") (S: " + ", ".join(str(x) for x in instructor_subjects[key]) + ")")
+
     #
 
 
@@ -435,21 +484,23 @@ if __name__ == '__main__':
     # graphDepartmentTermsByKeyAverage(
     #     "course_challenging_rating_response_count", "course_challenging_rating_mean", "EECS")
 
-    # print("\n================\n\nINSTRUCTION\n")
-    # rankProfessorByKeyAverage(
-    #     "course_instruction_rating_response_count", "course_instruction_rating_mean", "EECS")
-    #
-    # print("\n================\n\nOVERALL\n")
-    # rankProfessorByKeyAverage(
-    #     "course_overall_rating_response_count", "course_overall_rating_mean", "EECS")
+    limit = 500
+    print("\n================\n\ncourse_instruction_rating\n")
+    rankProfessorByKeyAverage(
+        "course_instruction_rating_response_count", "course_instruction_rating_mean", None, limit, True)
 
-    # print("\n================\n\nLEARNED\n")
-    # rankProfessorByKeyAverage(
-    #     "course_learned_rating_response_count", "course_learned_rating_mean", None)
-    #
-    # print("\n================\n\nCHALLENGED\n")
-    # rankProfessorByKeyAverage(
-    #     "course_challenging_rating_response_count", "course_challenging_rating_mean", None)
+    print("\n================\n\ncourse_overall_rating\n")
+    rankProfessorByKeyAverage(
+        "course_overall_rating_response_count", "course_overall_rating_mean", None, limit, True)
+
+    print("\n================\n\ncourse_learned_rating\n")
+    rankProfessorByKeyAverage(
+        "course_learned_rating_response_count", "course_learned_rating_mean", None, limit, True)
+
+    print("\n================\n\ncourse_challenging_rating\n")
+    rankProfessorByKeyAverage(
+        "course_challenging_rating_response_count", "course_challenging_rating_mean", None, limit, True)
+
     # rankProfessorByTotal(None)
 
     # rankProfessorByKeyTotal("course_instruction_rating_response_count",
