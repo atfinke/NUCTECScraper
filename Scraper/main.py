@@ -53,8 +53,10 @@ def fetchSubjectCTECs(driver, logger, subject):
         except TimeoutException:
             logger.error("Loading took too much time!")
 
+        # TGS or UGRD
+
         driver.execute_script(
-            "document.querySelector('#NW_CT_PB_SRCH_ACAD_CAREER').value = 'TGS'")
+            "document.querySelector('#NW_CT_PB_SRCH_ACAD_CAREER').value = 'UGRD'")
         driver.execute_script(
             "document.querySelector('#NW_CT_PB_SRCH_ACAD_CAREER').onchange();")
 
@@ -272,7 +274,7 @@ def fetchClassCTECs(driver, logger, main_window, subject, classNumber, last_clas
         while onCTECTab == False:
             for handle in driver.window_handles:
                 driver.switch_to.window(handle)
-                sleep(0.1)
+                sleep(0.5)
                 if "Northwestern - " in driver.title:
                     onCTECTab = True
                     validBluePage = True
@@ -304,7 +306,9 @@ def fetchClassCTECs(driver, logger, main_window, subject, classNumber, last_clas
                 scrap["report_caesar_title"] = name.replace(",", "|")
                 scrap["report_caesar_instructor"] = instructor
                 scrap["report_caesar_subject"] = subject
-                scrap["report_caesar_career"] = "The Graduate School"
+
+                # The Graduate School or Undergraduate
+                scrap["report_caesar_career"] = "Undergraduate"
                 scrap["report_caesar_class_number"] = classNumber
                 new_subject_CTECs.append(scrap)
             else:
