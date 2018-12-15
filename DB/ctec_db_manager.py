@@ -452,38 +452,7 @@ def createProfessorsTable(subject_filter):
             print(e)
             session.rollback()
 
-
-if __name__ == '__main__':
-    engine = create_engine('sqlite:///' + "CTEC.db")
-    core.model.Base.metadata.create_all(engine)
-    session = sessionmaker(bind=engine)()
-
-    # for file_name in glob.glob("./input/*.csv"):
-    #     with open(file_name, mode='r', encoding='utf-8') as infile:
-    #         reader = csv.DictReader(infile)
-    #         for row in reader:
-    #             print(row)
-    #             obj = core.model.CTEC(row)
-    #             try:
-    #                 session.add(obj)
-    #                 session.commit()
-    #             except Exception as e:
-    #                 session.rollback()
-
-    # createProfessorsTable(None)
-
-    # graphDepartmentTermsByKeyAverage(
-    #     "course_instruction_rating_response_count", "course_instruction_rating_mean", "EECS")
-
-    # graphDepartmentTermsByKeyAverage(
-    #     "course_overall_rating_response_count", "course_overall_rating_mean", "EECS")
-    #
-    # graphDepartmentTermsByKeyAverage(
-    #     "course_learned_rating_response_count", "course_learned_rating_mean", "EECS")
-    #
-    # graphDepartmentTermsByKeyAverage(
-    #     "course_challenging_rating_response_count", "course_challenging_rating_mean", "EECS")
-
+def dumpRatings():
     limit = 500
     print("\n================\n\ncourse_instruction_rating\n")
     rankProfessorByKeyAverage(
@@ -505,6 +474,38 @@ if __name__ == '__main__':
 
     # rankProfessorByKeyTotal("course_instruction_rating_response_count",
     #                         "course_instruction_rating_mean", "EECS")
+
+def dumpGraphs():
+    createProfessorsTable(None)
+
+    graphDepartmentTermsByKeyAverage(
+        "course_instruction_rating_response_count", "course_instruction_rating_mean", "EECS")
+
+    graphDepartmentTermsByKeyAverage(
+        "course_overall_rating_response_count", "course_overall_rating_mean", "EECS")
+
+    graphDepartmentTermsByKeyAverage(
+        "course_learned_rating_response_count", "course_learned_rating_mean", "EECS")
+
+    graphDepartmentTermsByKeyAverage(
+        "course_challenging_rating_response_count", "course_challenging_rating_mean", "EECS")
+
+if __name__ == '__main__':
+    engine = create_engine('sqlite:///' + "CTEC.db")
+    core.model.Base.metadata.create_all(engine)
+    session = sessionmaker(bind=engine)()
+
+    # for file_name in glob.glob("./input/*.csv"):
+    #     with open(file_name, mode='r', encoding='utf-8') as infile:
+    #         reader = csv.DictReader(infile)
+    #         for row in reader:
+    #             print(row)
+    #             obj = core.model.CTEC(row)
+    #             try:
+    #                 session.add(obj)
+    #                 session.commit()
+    #             except Exception as e:
+    #                 session.rollback()
 
     ctec_count = 0
     response_count = 0
