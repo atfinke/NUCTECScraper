@@ -1,3 +1,5 @@
+import logging
+
 from time import sleep
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
@@ -8,9 +10,9 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.alert import Alert
 
-def authenticate(driver, username, password):
-    print("=============")
-    print("Starting Caesar Log In")
+def authenticate(driver, logger, username, password):
+    logger.info("=============")
+    logger.info("Starting Caesar Log In")
 
     url = "https://caesar.ent.northwestern.edu/";
     driver.get(url)
@@ -19,7 +21,7 @@ def authenticate(driver, username, password):
     try:
         myElem = WebDriverWait(driver, delay).until(EC.presence_of_element_located((By.ID, 'IDToken1')))
     except TimeoutException:
-        print "Loading took too much time!"
+        logger.error("Loading took too much time!")
 
     inputElement = driver.find_element_by_id("IDToken1")
     inputElement.send_keys(username)
@@ -29,12 +31,12 @@ def authenticate(driver, username, password):
     # Sleeping until 2FA page loaded
     sleep(0.1);
 
-    twoFactorLoaded = False;
-    while twoFactorLoaded == False:
+    is_two_factor_page_loaded = False;
+    while is_two_factor_page_loaded == False:
         buttons = driver.find_elements_by_tag_name("input");
         for button in buttons:
             if (button.get_attribute('name') == "Login.Submit"):
-                twoFactorLoaded = True;
+                is_two_factor_page_loaded = True;
                 break;
         sleep(0.5);
 
@@ -45,13 +47,13 @@ def authenticate(driver, username, password):
             pass;
         sleep(1);
 
-    print("Waiting for 2FA approval...")
+    logger.info("Waiting for 2FA approval...")
 
     delay = 60;
     try:
         myElem = WebDriverWait(driver, delay).until(EC.presence_of_element_located((By.ID, 'PTNUI_LAND_WRK_GROUPBOX14$PIMG')))
     except TimeoutException:
-        print "Loading took too much time!"
+        logger.error("Loading took too much time!")
 
-    print("2FA Successful!");
-    print("Logged into Caesar");
+    logger.info("2FA Successful!");
+    logger.info("Logged into Caesar");
