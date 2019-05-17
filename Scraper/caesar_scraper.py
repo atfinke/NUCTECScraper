@@ -65,6 +65,20 @@ def scrape_subject_ctecs(driver, logger, career, subject):
 
                 logger.info(spacer + subject + " " +
                             str(classNumber) + ": Starting")
+                
+                sleep(1)
+                
+                class_row_element = driver.find_element_by_id(class_row_id)
+                class_row_element.click()
+                classNumber = class_row_element.get_attribute(
+                    'innerText').split('-')[0]
+
+                sleep(1)
+                
+                class_row_element = driver.find_element_by_id(class_row_id)
+                class_row_element.click()
+                classNumber = class_row_element.get_attribute(
+                    'innerText').split('-')[0]
 
                 try:
                     ctecs, resultsRowsText = scrape_class_ctecs(
@@ -108,8 +122,8 @@ def scrape_class_ctecs(driver, logger, main_window, career, subject, classNumber
         is_showing_results_for_current_class = False
         attempts = 0
 
-        logger.info(spacer + spacer + "Waiting 1 second to load")
-        sleep(1)
+        logger.info(spacer + spacer + "Waiting 4 second to load")
+        sleep(4)
 
         while (is_showing_results_for_current_class == False and attempts < 10):
             attempts += 1

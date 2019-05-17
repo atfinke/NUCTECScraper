@@ -28,7 +28,7 @@ def open_subject_ctecs_from_main_page(driver, logger, career, subject):
     try:
         logger.info("Main Page -> Click Manage Classes")
         main_page_classes_button = wait(
-            driver, 'PTNUI_LAND_REC14$0_row_8', 15)
+            driver, 'win0divPTNUI_LAND_REC_GROUPLET$6', 15)
         main_page_classes_button.click()
 
         logger.info("Manage Classes Page -> Click Search CTECs")
