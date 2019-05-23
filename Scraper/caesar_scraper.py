@@ -65,16 +65,16 @@ def scrape_subject_ctecs(driver, logger, career, subject):
 
                 logger.info(spacer + subject + " " +
                             str(classNumber) + ": Starting")
-                
+
                 sleep(1)
-                
+
                 class_row_element = driver.find_element_by_id(class_row_id)
                 class_row_element.click()
                 classNumber = class_row_element.get_attribute(
                     'innerText').split('-')[0]
 
                 sleep(1)
-                
+
                 class_row_element = driver.find_element_by_id(class_row_id)
                 class_row_element.click()
                 classNumber = class_row_element.get_attribute(
@@ -225,34 +225,33 @@ def scrape_class_ctecs(driver, logger, main_window, career, subject, classNumber
                             break
 
             if is_valid_bluera_ctec_page:
-                delay = 30
+                delay = 10
                 try:
                     myElem = WebDriverWait(driver, delay).until(
                         EC.presence_of_element_located((By.ID, 'reportView')))
+
+                    scrape = scrape_loaded_ctec_page(driver)
+                    if len(scrape) > 1:
+                        scrape["report_caesar_title"] = name # .replace(",", "|")
+                        scrape["report_caesar_instructor"] = instructor
+                        scrape["report_caesar_subject"] = subject
+
+                        # The Graduate School or Undergraduate
+                        scrape["report_caesar_career"] = career
+                        scrape["report_caesar_class_number"] = classNumber
+                        new_subject_CTECs.append(scrape)
+
+                        completed_class_row_parsing = True
+                        logger.info(spacer + spacer + "Class Progress: " +
+                                    str(class_page_ctec_scrape_count) + "/" + str(len(class_page_class_row)))
+                    else:
+                        logger.warning(spacer + spacer +
+                                       spacer + "CTEC page empty")
+
                 except TimeoutException:
                     driver.close()
                     driver.switch_to.window(driver.window_handles[0])
-                    logger.error("Loading took too much time!")
-                    continue
-
-                scrape = scrape_loaded_ctec_page(driver)
-                if len(scrape) > 1:
-                    scrape["report_caesar_title"] = name # .replace(",", "|")
-                    scrape["report_caesar_instructor"] = instructor
-                    scrape["report_caesar_subject"] = subject
-
-                    # The Graduate School or Undergraduate
-                    scrape["report_caesar_career"] = career
-                    scrape["report_caesar_class_number"] = classNumber
-                    new_subject_CTECs.append(scrape)
-
-                    completed_class_row_parsing = True
-                    logger.info(spacer + spacer + "Class Progress: " +
-                                str(class_page_ctec_scrape_count) + "/" + str(len(class_page_class_row)))
-                else:
-                    logger.warning(spacer + spacer +
-                                   spacer + "CTEC page empty")
-
+                    logger.error("ctec Loading took too much time!")
 
             elif are_remaining_ctecs_too_old:
                 logger.info(spacer + spacer + "Class Progress: " +

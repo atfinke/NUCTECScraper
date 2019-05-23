@@ -22,8 +22,15 @@ def scrape_loaded_ctec_page(driver):
     creation_date_elements = driver.find_elements_by_class_name("coverPageSignatureBlock")
     if len(creation_date_elements) == 1:
         report_details["report_creation_date"] = creation_date_elements[0].text.replace("Creation Date", " ").lstrip()
+    else:
+        creation_date_elements = driver.find_elements_by_class_name("CoverSignature")
+        if len(creation_date_elements) == 1:
+            report_details["report_creation_date"] = creation_date_elements[0].text
 
     cover_elements = driver.find_elements_by_class_name("coverFullTitle")
+    if len(cover_elements) == 0:
+        cover_elements = driver.find_elements_by_class_name("header")
+
     if len(cover_elements) > 0:
         cover_span_elements = cover_elements[0].find_elements_by_tag_name("span")
         for element in cover_span_elements:
@@ -40,6 +47,8 @@ def scrape_loaded_ctec_page(driver):
 
     for table in result_tables:
         summary = table.get_attribute("summary")
+        if len(str(summary)) < 5:
+            summary = table.find_element_by_xpath("./..").find_element_by_xpath("./..").get_attribute("innerText")
 
         if "Provide an overall rating of the instruction" in summary:
             rows = table.find_elements_by_tag_name("tr")
@@ -186,6 +195,8 @@ def scrape_loaded_ctec_page(driver):
     reactions_tables = driver.find_elements_by_class_name("CondensedTabular")
     for table in reactions_tables:
         summary = table.get_attribute("summary")
+        if len(str(summary)) < 5:
+            summary = table.find_element_by_xpath("./..").find_element_by_xpath("./..").get_attribute("innerText")
 
         if "Please summarize your reaction to this course focusing on the aspects that were most important to you" in summary:
             rows = table.find_elements_by_tag_name("tr")
@@ -196,3 +207,40 @@ def scrape_loaded_ctec_page(driver):
             report_details["reactions"] = reactions
 
     return report_details
+# #
+# from selenium import webdriver
+# from selenium.webdriver import ActionChains
+# from selenium.webdriver.firefox.options import Options
+# from caesar_authentication import authenticate
+# import logging
+#
+# from time import sleep
+# from selenium import webdriver
+#
+# from selenium.webdriver import ActionChains
+# from selenium.webdriver.firefox.options import Options
+# from selenium.webdriver.support.ui import WebDriverWait
+# from selenium.webdriver.common.by import By
+# from selenium.webdriver.support import expected_conditions as EC
+#
+# from caesar_authentication import authenticate
+# from bluera_ctec_scraper import scrape_loaded_ctec_page
+# import casear_navigation
+#
+# name = "Driver-"
+# logger = logging.getLogger(name)
+# logger.setLevel(logging.INFO)
+#
+# options = Options()
+# # options.set_headless(True)
+#
+# firefox_profile = webdriver.FirefoxProfile()
+# firefox_profile.set_preference('permissions.default.image', 2)
+#
+# driver = webdriver.Firefox(options=options,firefox_profile=firefox_profile, executable_path="/usr/local/bin/geckodriver")
+# driver.set_window_size(1000, 1000)
+#
+# driver.get("https://northwestern.bluera.com/northwestern/rpvf-eng.aspx?lang=eng&redi=1&SelectedIDforPrint=fb766f9f22c982b6aad76a74e39edbc17588b31d34c344b9e4f88e74c431820bd91d9e30d4b48dfcf6507e4f9d9aac71&ReportType=2&regl=en-US")
+# myElem = WebDriverWait(driver, 5).until(
+#     EC.presence_of_element_located((By.ID, 'reportView')))
+# print(scrape_loaded_ctec_page(driver))
